@@ -1,1 +1,3 @@
 rwkv >= 0.8.16
+pandas
+ninja # if use cuda

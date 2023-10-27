@@ -2,7 +2,7 @@ import torch.nn as nn
 import numpy as np
 from tqdm import tqdm
 from metrics import calc_metrics
-from serialize import get_univariate_kshot_examples, get_input_prompt, vec2str, output_str2list
+from serialize import get_univariate_kshot_examples, get_input_prompt, vec2str, output_str2list, is_valid_output_str
 
 class ExpRWKV():
     def __init__(self, pipeline, test_dataset, train_dataset, input_len, pred_len) -> None:
@@ -26,11 +26,10 @@ class ExpRWKV():
             # print(input_prompt)
             output_str = self.pipeline.greedy_generate(input_prompt, 
                                                   token_count=num_token_to_generate)
-            # print(output_str)
-            # exit()
-            y_pred = output_str2list(output_str, max_len=self.pred_len)
-            y_preds.append(y_pred)
-            y_trues.append(y_true[:, col])
+            if is_valid_output_str(output_str, max_len=self.pred_len):
+                y_pred = output_str2list(output_str, max_len=self.pred_len)
+                y_preds.append(y_pred)
+                y_trues.append(y_true[:, col])
         y_preds = np.array(y_preds)
         y_trues = np.array(y_trues)
         print('test shape:', y_preds.shape, y_trues.shape)

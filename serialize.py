@@ -14,6 +14,15 @@ def output_str2list(output_str, max_len, sep=','):
 def output_str2tensor(output_str, max_len, sep=','):
     return torch.tensor(output_str2list(output_str, max_len, sep=sep))
 
+def is_valid_output_str(output_str, max_len, sep=','):
+    try:
+        output_list = output_str2list(output_str, max_len, sep=sep)
+        if len(output_list) != max_len:
+            return False
+        return True
+    except:
+        return False
+
 def get_univariate_kshot_examples(train_dataset, col=0, k=1):
     examples = ""
     for _ in range(k):
