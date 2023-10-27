@@ -7,16 +7,11 @@ warnings.filterwarnings('ignore')
 
 
 class Dataset_ETT_hour(Dataset):
-    def __init__(self, data_path, flag='train', size=None, 
+    def __init__(self, data_path, seq_len, pred_len, flag='train', 
                  features='S', target='OT', scale=True):
-        # size [seq_len, pred_len]
         # info
-        if size == None:
-            self.seq_len = 24*4*4
-            self.pred_len = 24*4
-        else:
-            self.seq_len = size[0]
-            self.pred_len = size[2]
+        self.seq_len = seq_len
+        self.pred_len = pred_len
         # init
         assert flag in ['train', 'test', 'val']
         type_map = {'train':0, 'val':1, 'test':2}
@@ -71,3 +66,15 @@ class Dataset_ETT_hour(Dataset):
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
+    
+if __name__ == "__main__":
+    ETT_hour_dataset = Dataset_ETT_hour(data_path='data/ETT/ETTh2.csv', seq_len=96, 
+                                        pred_len=24, flag='test', features='S', 
+                                        target='OT', scale=True)
+    from serialize import vec2str
+    for i in range(1):
+        print(ETT_hour_dataset[i][0].shape, ETT_hour_dataset[i][1].shape)
+        pred = ETT_hour_dataset[i][0]
+        pred_str = vec2str(pred[:,0])
+        print(pred_str)
+        print(len(pred_str.split(",")))

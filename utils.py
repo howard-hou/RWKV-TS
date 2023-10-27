@@ -1,3 +1,5 @@
+import random
+import numpy as np
 import torch
 
 class StandardScaler():
@@ -21,3 +23,10 @@ class StandardScaler():
             mean = mean[-1:]
             std = std[-1:]
         return (data * std) + mean
+    
+
+def set_random_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
