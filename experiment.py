@@ -14,7 +14,7 @@ class ExpRWKV():
         self.mse_loss = nn.MSELoss()
         self.mae_loss = nn.L1Loss()
 
-    def run_test_exp(self, col=0, k=1):
+    def run_univariate_test_exp(self, col=0, k=1):
         kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k)
         print("examples:\n"+kshot_examples)
         y_preds = []
@@ -35,6 +35,7 @@ class ExpRWKV():
         print('test shape:', y_preds.shape, y_trues.shape)
         mae, mse, rmse, mape, mspe = calc_metrics(y_preds, y_trues)
         print(mae, mse, rmse, mape, mspe)
+        return {"mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
 
     def calc_generation_length(self, seq_y, col=0):
         str_y = vec2str(seq_y[:, col])

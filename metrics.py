@@ -23,11 +23,11 @@ def MAPE(pred, true):
 def MSPE(pred, true):
     return np.mean(np.square((pred - true) / true))
 
-def calc_metrics(pred, true):
-    mae = MAE(pred, true)
-    mse = MSE(pred, true)
-    rmse = RMSE(pred, true)
-    mape = MAPE(pred, true)
-    mspe = MSPE(pred, true)
+def calc_metrics(pred, true, precision=4):
+    mae = round(MAE(pred, true), precision)
+    mse = round(MSE(pred, true), precision)
+    rmse = round(RMSE(pred, true), precision)
+    mape = round(MAPE(pred, true), precision)
+    mspe = round(MSPE(pred, true), precision)
     
     return mae,mse,rmse,mape,mspe

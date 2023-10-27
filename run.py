@@ -1,4 +1,5 @@
 import os
+import json
 import argparse
 # set these before import RWKV
 os.environ['RWKV_JIT_ON'] = '1'
@@ -15,12 +16,17 @@ from utils import set_random_seed
 
 def parse_arg():
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument('data_path', type=str, default='data path')
-    arg_parser.add_argument('model_path', type=str, default='RWKV model path')
+    arg_parser.add_argument('data_path', type=str, help='data path')
+    arg_parser.add_argument('model_path', type=str, help='RWKV model path')
+    arg_parser.add_argument('output_path', type=str, help='output path')
     arg_parser.add_argument('--strategy', type=str, default='cpu fp32')
     arg_parser.add_argument('--seq_len', type=int, default=96)
     arg_parser.add_argument('--pred_len', type=int, default=24)
     arg_parser.add_argument('--seed', type=int, default=22)
+    arg_parser.add_argument('--fewshot', type=int, default=1)
+    arg_parser.add_argument('--features', type=str, default='S')
+    arg_parser.add_argument('--target', type=str, default='OT')
+    arg_parser.add_argument('--disable_scale', action='store_true')
     return arg_parser.parse_args()
 
 
@@ -31,13 +37,17 @@ def main():
     tokenizer = TRIE_TOKENIZER('rwkv_vocab_v20230424.txt')
     pipeline = Pipeline(model, tokenizer)
     test_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.seq_len, 
-                               pred_len=args.pred_len, flag='test', features='S', 
-                               target='OT', scale=True)
+                               pred_len=args.pred_len, flag='test', features=args.features, 
+                               target=args.target, scale=not args.disable_scale)
     train_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.seq_len, 
-                               pred_len=args.pred_len, flag='train', features='S', 
-                               target='OT', scale=True)
+                               pred_len=args.pred_len, flag='train', features=args.features, 
+                               target=args.target, scale=not args.disable_scale)
+
     exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.seq_len, args.pred_len)
-    exp.run_test_exp(col=0, k=2)
+    exp_res = exp.run_univariate_test_exp(col=0, k=args.fewshot)
+    exp_out = {"exp_config": vars(args), "exp_res": exp_res}
+    json.dump(exp_out, open(args.output_path, "w"), indent=4)
+
 
 
 
