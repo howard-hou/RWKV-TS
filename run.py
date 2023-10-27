@@ -1,6 +1,7 @@
 import os
 import json
 import argparse
+from pathlib import Path
 # set these before import RWKV
 os.environ['RWKV_JIT_ON'] = '1'
 os.environ["RWKV_CUDA_ON"] = '0'
@@ -32,6 +33,8 @@ def parse_arg():
 
 def main():
     args = parse_arg()
+    output_dir = Path(args.output_path).parent
+    output_dir.mkdir(parents=True, exist_ok=True)
     set_random_seed(args.seed)
     model = RWKV(model=args.model_path, strategy=args.strategy)
     tokenizer = TRIE_TOKENIZER('rwkv_vocab_v20230424.txt')
@@ -47,8 +50,6 @@ def main():
     exp_res = exp.run_univariate_test_exp(col=0, k=args.fewshot)
     exp_out = {"exp_config": vars(args), "exp_res": exp_res}
     json.dump(exp_out, open(args.output_path, "w"), indent=4)
-
-
 
 
 if __name__ == "__main__":
