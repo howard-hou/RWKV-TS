@@ -32,10 +32,12 @@ class ExpRWKV():
                 y_trues.append(y_true[:, col])
         y_preds = np.array(y_preds)
         y_trues = np.array(y_trues)
+        num_valid_samples = len(y_preds)
         print('test shape:', y_preds.shape, y_trues.shape)
         mae, mse, rmse, mape, mspe = calc_metrics(y_preds, y_trues)
         print(mae, mse, rmse, mape, mspe)
-        return {"mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
+        return {"num_valid_samples": num_valid_samples, "col": col, "k": k,
+                "mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
 
     def calc_generation_length(self, seq_y, col=0):
         str_y = vec2str(seq_y[:, col])
