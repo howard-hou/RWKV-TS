@@ -19,13 +19,15 @@ class ExpRWKV():
         print("examples:\n"+kshot_examples)
         y_preds = []
         y_trues = []
-        for i in tqdm(range(len(self.test_dataset)), desc='testing'):
+        num_total_samples = len(self.test_dataset)
+        for i in tqdm(range(num_total_samples), desc='testing'):
             seq_x, y_true = self.test_dataset[i]
             input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
-            num_token_to_generate = self.calc_generation_length(y_true, col=col)
+            num_tokens_to_input = self.calc_input_tokens(input_prompt)
+            num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col)
             # print(input_prompt)
             output_str = self.pipeline.greedy_generate(input_prompt, 
-                                                  token_count=num_token_to_generate)
+                                                  token_count=num_tokens_to_generate)
             if is_valid_output_str(output_str, max_len=self.pred_len):
                 y_pred = output_str2list(output_str, max_len=self.pred_len)
                 y_preds.append(y_pred)
@@ -36,10 +38,18 @@ class ExpRWKV():
         print('test shape:', y_preds.shape, y_trues.shape)
         mae, mse, rmse, mape, mspe = calc_metrics(y_preds, y_trues)
         print(mae, mse, rmse, mape, mspe)
-        return {"num_valid_samples": num_valid_samples, "col": col, "k": k,
+        return {"num_valid_samples": num_valid_samples, 
+                "num_total_samples":num_total_samples, 
+                "num_tokens_to_input": num_tokens_to_input,
+                "num_tokens_to_generate": num_tokens_to_generate,
+                "col": col, "num_shots": k,
                 "mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
 
-    def calc_generation_length(self, seq_y, col=0):
+    def calc_generation_tokens(self, seq_y, col=0):
         str_y = vec2str(seq_y[:, col])
         token_y = self.pipeline.encode(str_y)
         return len(token_y)
+
+    def calc_input_tokens(self, input_prompt):
+        token_input = self.pipeline.encode(input_prompt)
+        return len(token_input)

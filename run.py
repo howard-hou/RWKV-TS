@@ -24,7 +24,7 @@ def parse_arg():
     arg_parser.add_argument('--seq_len', type=int, default=96)
     arg_parser.add_argument('--pred_len', type=int, default=24)
     arg_parser.add_argument('--seed', type=int, default=22)
-    arg_parser.add_argument('--fewshot', type=int, default=1)
+    arg_parser.add_argument('--num_shots', type=int, default=1)
     arg_parser.add_argument('--features', type=str, default='S')
     arg_parser.add_argument('--target', type=str, default='OT')
     arg_parser.add_argument('--disable_scale', action='store_true')
@@ -33,6 +33,7 @@ def parse_arg():
 
 def main():
     args = parse_arg()
+    print(args)
     output_dir = Path(args.output_path).parent
     output_dir.mkdir(parents=True, exist_ok=True)
     set_random_seed(args.seed)
@@ -47,7 +48,7 @@ def main():
                                target=args.target, scale=not args.disable_scale)
 
     exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.seq_len, args.pred_len)
-    exp_res = exp.run_univariate_test_exp(col=0, k=args.fewshot)
+    exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
     exp_out = {"exp_config": vars(args), "exp_res": exp_res}
     json.dump(exp_out, open(args.output_path, "w"), indent=4)
 
