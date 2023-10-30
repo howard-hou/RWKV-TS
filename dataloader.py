@@ -28,7 +28,7 @@ class Dataset_ETT_hour(Dataset):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(self.data_path)
         # [0, 1year - input_len, 1year + 4month - input_len]
-        border1s = [0, 12*30*24 - self.seq_len, 12*30*24+4*30*24 - self.seq_len]
+        border1s = [0, 12*30*24 - self.input_len, 12*30*24+4*30*24 - self.input_len]
         # [1year, 1year + 4month, 1year + 8month]
         border2s = [12*30*24, 12*30*24+4*30*24, 12*30*24+8*30*24]
         border1 = border1s[self.set_type]
