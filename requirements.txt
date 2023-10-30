@@ -1,3 +1,4 @@
 rwkv >= 0.8.16
 pandas
+matplotlib
 ninja # if use cuda

@@ -29,6 +29,7 @@ def parse_arg():
     arg_parser.add_argument('--features', type=str, default='S')
     arg_parser.add_argument('--target', type=str, default='OT')
     arg_parser.add_argument('--disable_scale', action='store_true')
+    arg_parser.add_argument('--visualize', action='store_true')
     return arg_parser.parse_args()
 
 
@@ -50,12 +51,13 @@ def main():
 
     exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.input_len, args.pred_len)
     # run predictions for visualization
-    visualize_experiment(exp, output_dir, col=0, k=args.num_shots, num_plots=6)
+    if args.visualize:
+        visualize_experiment(exp, output_dir, col=0, k=args.num_shots, num_plots=6)
     # # run experiment
-    # exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
-    # exp_out = {"exp_config": vars(args), "exp_res": exp_res}
-    # output_path = output_dir / 'exp_res.json'
-    # json.dump(exp_out, open(output_path, "w"), indent=4)
+    exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
+    exp_out = {"exp_config": vars(args), "exp_res": exp_res}
+    output_path = output_dir / 'exp_res.json'
+    json.dump(exp_out, open(output_path, "w"), indent=4)
 
 
 if __name__ == "__main__":
