@@ -7,10 +7,10 @@ warnings.filterwarnings('ignore')
 
 
 class Dataset_ETT_hour(Dataset):
-    def __init__(self, data_path, seq_len, pred_len, flag='train', 
+    def __init__(self, data_path, input_len, pred_len, flag='train', 
                  features='S', target='OT', scale=True):
         # info
-        self.seq_len = seq_len
+        self.input_len = input_len
         self.pred_len = pred_len
         # init
         assert flag in ['train', 'test', 'val']
@@ -27,7 +27,7 @@ class Dataset_ETT_hour(Dataset):
     def __read_data__(self):
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(self.data_path)
-        # [0, 1year - seq_len, 1year + 4month - seq_len]
+        # [0, 1year - input_len, 1year + 4month - input_len]
         border1s = [0, 12*30*24 - self.seq_len, 12*30*24+4*30*24 - self.seq_len]
         # [1year, 1year + 4month, 1year + 8month]
         border2s = [12*30*24, 12*30*24+4*30*24, 12*30*24+8*30*24]
@@ -52,7 +52,7 @@ class Dataset_ETT_hour(Dataset):
     
     def __getitem__(self, index):
         s_begin = index
-        s_end = s_begin + self.seq_len
+        s_end = s_begin + self.input_len
         r_begin = s_end
         r_end = r_begin + self.pred_len
 
@@ -62,13 +62,13 @@ class Dataset_ETT_hour(Dataset):
         return seq_x, seq_y
     
     def __len__(self):
-        return len(self.data_x) - self.seq_len- self.pred_len + 1
+        return len(self.data_x) - self.input_len- self.pred_len + 1
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
     
 if __name__ == "__main__":
-    ETT_hour_dataset = Dataset_ETT_hour(data_path='data/ETT/ETTh2.csv', seq_len=96, 
+    ETT_hour_dataset = Dataset_ETT_hour(data_path='data/ETT/ETTh2.csv', input_len=96, 
                                         pred_len=24, flag='test', features='S', 
                                         target='OT', scale=True)
     from serialize import vec2str

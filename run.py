@@ -40,10 +40,10 @@ def main():
     model = RWKV(model=args.model_path, strategy=args.strategy)
     tokenizer = TRIE_TOKENIZER('rwkv_vocab_v20230424.txt')
     pipeline = Pipeline(model, tokenizer)
-    test_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.input_len, 
+    test_dataset = Dataset_ETT_hour(data_path=args.data_path, input_len=args.input_len, 
                                pred_len=args.pred_len, flag='test', features=args.features, 
                                target=args.target, scale=not args.disable_scale)
-    train_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.input_len, 
+    train_dataset = Dataset_ETT_hour(data_path=args.data_path, input_len=args.input_len, 
                                pred_len=args.pred_len, flag='train', features=args.features, 
                                target=args.target, scale=not args.disable_scale)
 
