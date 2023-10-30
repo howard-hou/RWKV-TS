@@ -21,7 +21,7 @@ def parse_arg():
     arg_parser.add_argument('model_path', type=str, help='RWKV model path')
     arg_parser.add_argument('output_path', type=str, help='output path')
     arg_parser.add_argument('--strategy', type=str, default='cpu fp32')
-    arg_parser.add_argument('--seq_len', type=int, default=96)
+    arg_parser.add_argument('--input_len', type=int, default=96)
     arg_parser.add_argument('--pred_len', type=int, default=24)
     arg_parser.add_argument('--seed', type=int, default=22)
     arg_parser.add_argument('--num_shots', type=int, default=1)
@@ -40,14 +40,14 @@ def main():
     model = RWKV(model=args.model_path, strategy=args.strategy)
     tokenizer = TRIE_TOKENIZER('rwkv_vocab_v20230424.txt')
     pipeline = Pipeline(model, tokenizer)
-    test_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.seq_len, 
+    test_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.input_len, 
                                pred_len=args.pred_len, flag='test', features=args.features, 
                                target=args.target, scale=not args.disable_scale)
-    train_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.seq_len, 
+    train_dataset = Dataset_ETT_hour(data_path=args.data_path, seq_len=args.input_len, 
                                pred_len=args.pred_len, flag='train', features=args.features, 
                                target=args.target, scale=not args.disable_scale)
 
-    exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.seq_len, args.pred_len)
+    exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.input_len, args.pred_len)
     exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
     exp_out = {"exp_config": vars(args), "exp_res": exp_res}
     json.dump(exp_out, open(args.output_path, "w"), indent=4)
