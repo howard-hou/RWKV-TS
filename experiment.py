@@ -4,6 +4,7 @@ from tqdm import tqdm
 from metrics import calc_metrics
 from serialize import get_univariate_kshot_examples, get_input_prompt, vec2str, output_str2list, is_valid_output_str
 
+
 class ExpRWKV():
     def __init__(self, pipeline, test_dataset, train_dataset, input_len, pred_len) -> None:
         self.pipeline = pipeline
@@ -24,10 +25,11 @@ class ExpRWKV():
             seq_x, y_true = self.test_dataset[i]
             input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
             num_tokens_to_input = self.calc_input_tokens(input_prompt)
-            num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col)
+            num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col,
+                                                                 redundant=self.pred_len)
             # print(input_prompt)
             output_str = self.pipeline.greedy_generate(input_prompt, 
-                                                  token_count=num_tokens_to_generate)
+                                                token_count=num_tokens_to_generate)
             if is_valid_output_str(output_str, max_len=self.pred_len):
                 y_pred = output_str2list(output_str, max_len=self.pred_len)
                 y_preds.append(y_pred)
@@ -45,11 +47,26 @@ class ExpRWKV():
                 "col": col, "num_shots": k,
                 "mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
 
-    def calc_generation_tokens(self, seq_y, col=0):
+    def calc_generation_tokens(self, seq_y, col=0, redundant=5):
         str_y = vec2str(seq_y[:, col])
         token_y = self.pipeline.encode(str_y)
-        return len(token_y)
+        return len(token_y) + redundant
 
     def calc_input_tokens(self, input_prompt):
         token_input = self.pipeline.encode(input_prompt)
         return len(token_input)
+
+    def run_one_univariate_predict(self, i, col=0, k=1):
+        kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k)
+        seq_x, y_true = self.test_dataset[i]
+        input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
+        num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col, 
+                                                             redundant=self.pred_len)
+        output_str = self.pipeline.greedy_generate(input_prompt, 
+                                                   token_count=num_tokens_to_generate)
+        if is_valid_output_str(output_str, max_len=self.pred_len):
+                y_pred = output_str2list(output_str, max_len=self.pred_len)
+        else:
+            print(f"{i} - invalid output_str: {output_str}")
+            return None
+        return seq_x[:, 0], y_pred, y_true[:, col]

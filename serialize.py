@@ -9,7 +9,19 @@ def vec2str(vec, precision=2, sep=','):
     return sep.join([float2str(v, precision) for v in vec])
 
 def output_str2list(output_str, max_len, sep=','):
-    return [float(s) for s in output_str.split(sep)][:max_len]
+    # \n in output_str is replaced by sep
+    if '\n' in output_str:
+        output_str = output_str.replace('\n', sep)
+    output_splits = output_str.split(sep)
+    filtered_splits = []
+    for s in output_splits:
+        try:
+            s = float(s)
+            filtered_splits.append(s)
+        except:
+            pass
+    truncated_splits = filtered_splits[:max_len]
+    return [float(s) for s in truncated_splits]
 
 def output_str2tensor(output_str, max_len, sep=','):
     return torch.tensor(output_str2list(output_str, max_len, sep=sep))

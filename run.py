@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 # set these before import RWKV
 os.environ['RWKV_JIT_ON'] = '1'
-os.environ["RWKV_CUDA_ON"] = '1'
+os.environ["RWKV_CUDA_ON"] = '0'
 
 from rwkv.model import RWKV
 from rwkv.rwkv_tokenizer import TRIE_TOKENIZER
@@ -13,13 +13,14 @@ from dataloader import Dataset_ETT_hour
 from pipeline import Pipeline
 from experiment import ExpRWKV
 from utils import set_random_seed
+from visualize import visualize_experiment
 
 
 def parse_arg():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('data_path', type=str, help='data path')
     arg_parser.add_argument('model_path', type=str, help='RWKV model path')
-    arg_parser.add_argument('output_path', type=str, help='output path')
+    arg_parser.add_argument('output_dir', type=str, help='output dir')
     arg_parser.add_argument('--strategy', type=str, default='cpu fp32')
     arg_parser.add_argument('--input_len', type=int, default=96)
     arg_parser.add_argument('--pred_len', type=int, default=24)
@@ -34,7 +35,7 @@ def parse_arg():
 def main():
     args = parse_arg()
     print(args)
-    output_dir = Path(args.output_path).parent
+    output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     set_random_seed(args.seed)
     model = RWKV(model=args.model_path, strategy=args.strategy)
@@ -48,9 +49,13 @@ def main():
                                target=args.target, scale=not args.disable_scale)
 
     exp = ExpRWKV(pipeline, test_dataset, train_dataset, args.input_len, args.pred_len)
-    exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
-    exp_out = {"exp_config": vars(args), "exp_res": exp_res}
-    json.dump(exp_out, open(args.output_path, "w"), indent=4)
+    # run predictions for visualization
+    visualize_experiment(exp, output_dir, col=0, k=args.num_shots, num_plots=6)
+    # # run experiment
+    # exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
+    # exp_out = {"exp_config": vars(args), "exp_res": exp_res}
+    # output_path = output_dir / 'exp_res.json'
+    # json.dump(exp_out, open(output_path, "w"), indent=4)
 
 
 if __name__ == "__main__":
