@@ -15,12 +15,13 @@ class ExpRWKV():
         self.mse_loss = nn.MSELoss()
         self.mae_loss = nn.L1Loss()
 
-    def run_univariate_test_exp(self, col=0, k=1):
+    def run_univariate_test_exp(self, col=0, k=1, scale_transform=False):
         kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k)
         print("examples:\n"+kshot_examples)
         y_preds = []
         y_trues = []
         num_total_samples = len(self.test_dataset)
+        num_total_samples = 10
         for i in tqdm(range(num_total_samples), desc='testing'):
             seq_x, y_true = self.test_dataset[i]
             input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
@@ -37,6 +38,10 @@ class ExpRWKV():
         y_preds = np.array(y_preds)
         y_trues = np.array(y_trues)
         num_valid_samples = len(y_preds)
+        if scale_transform:
+            y_preds = self.test_dataset.scaler.transform(y_preds)
+            y_trues = self.test_dataset.scaler.transform(y_trues)
+        print("test values:", y_preds[0,0:5], y_trues[0,0:5])
         print('test shape:', y_preds.shape, y_trues.shape)
         mae, mse, rmse, mape, mspe = calc_metrics(y_preds, y_trues)
         print(mae, mse, rmse, mape, mspe)
