@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 # set these before import RWKV
 os.environ['RWKV_JIT_ON'] = '1'
-os.environ["RWKV_CUDA_ON"] = '0'
+os.environ["RWKV_CUDA_ON"] = '1'
 
 from rwkv.model import RWKV
 from rwkv.rwkv_tokenizer import TRIE_TOKENIZER
