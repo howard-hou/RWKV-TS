@@ -53,11 +53,12 @@ def main():
     # run predictions for visualization
     if args.visualize:
         visualize_experiment(exp, output_dir, col=0, k=args.num_shots, num_plots=6)
-    # # run experiment
-    exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
-    exp_out = {"exp_config": vars(args), "exp_res": exp_res}
-    output_path = output_dir / 'exp_res.json'
-    json.dump(exp_out, open(output_path, "w"), indent=4)
+    else:
+        # # run experiment
+        exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots)
+        exp_out = {"exp_config": vars(args), "exp_res": exp_res}
+        output_path = output_dir / 'exp_res.json'
+        json.dump(exp_out, open(output_path, "w"), indent=4)
 
 
 if __name__ == "__main__":
