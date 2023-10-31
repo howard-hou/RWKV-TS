@@ -23,7 +23,7 @@ def plot_pred(x, y_pred, y_true, exp_name, output_path):
     plt.savefig(output_path)
 
 def visualize_experiment(exp, output_dir, col=0, k=1, num_plots=6, 
-                         precision=2, base=0, to_int=False):
+                         to_int=False):
     """Visualize a single experiment."""
     # random select num_plots index from test dataset
     num_total_samples = len(exp.test_dataset)
@@ -33,9 +33,7 @@ def visualize_experiment(exp, output_dir, col=0, k=1, num_plots=6,
     exp_name = output_dir.name
     for i in tqdm(indices, desc='visualizing'):
         output_path = output_dir / f'{i}.png'
-        one_pred = exp.run_one_univariate_predict(i=i, col=col, k=k,
-                                                  precision=precision, base=base,
-                                                  to_int=to_int)
+        one_pred = exp.run_one_univariate_predict(i=i, col=col, k=k, to_int=to_int)
         if one_pred is None:
             continue
         x, y_pred, y_true = one_pred

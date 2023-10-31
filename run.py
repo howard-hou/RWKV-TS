@@ -54,12 +54,12 @@ def main():
     # run predictions for visualization
     if args.visualize:
         visualize_experiment(exp, output_dir, col=0, k=args.num_shots, num_plots=6,
-                             precision=2, base=2, to_int=args.int_scale)
+                             to_int=args.int_scale)
     else:
         # # run experiment
         exp_res = exp.run_univariate_test_exp(col=0, k=args.num_shots, 
                                               scale_transform=args.disable_scale,
-                                              precision=2, base=2, to_int=args.int_scale)
+                                              to_int=args.int_scale)
         exp_out = {"exp_config": vars(args), "exp_res": exp_res}
         output_path = output_dir / 'exp_res.json'
         json.dump(exp_out, open(output_path, "w"), indent=4)
