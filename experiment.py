@@ -15,8 +15,11 @@ class ExpRWKV():
         self.mse_loss = nn.MSELoss()
         self.mae_loss = nn.L1Loss()
 
-    def run_univariate_test_exp(self, col=0, k=1, scale_transform=False):
-        kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k)
+    def run_univariate_test_exp(self, col=0, k=1, scale_transform=False,
+                                precision=2, base=0, to_int=False):
+        kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k,
+                                                        precision=precision, base=base,
+                                                        to_int=to_int)
         print("examples:\n"+kshot_examples)
         y_preds = []
         y_trues = []
@@ -24,15 +27,16 @@ class ExpRWKV():
         num_total_samples = 10
         for i in tqdm(range(num_total_samples), desc='testing'):
             seq_x, y_true = self.test_dataset[i]
-            input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
+            input_prompt = get_input_prompt(seq_x, kshot_examples, col=col,
+                                            precision=precision, base=base, to_int=to_int)
             num_tokens_to_input = self.calc_input_tokens(input_prompt)
             num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col,
                                                                  redundant=self.pred_len)
             # print(input_prompt)
             output_str = self.pipeline.greedy_generate(input_prompt, 
                                                 token_count=num_tokens_to_generate)
-            if is_valid_output_str(output_str, max_len=self.pred_len):
-                y_pred = output_str2list(output_str, max_len=self.pred_len)
+            if is_valid_output_str(output_str, max_len=self.pred_len, base=base, to_int=to_int):
+                y_pred = output_str2list(output_str, max_len=self.pred_len, base=base, to_int=to_int)
                 y_preds.append(y_pred)
                 y_trues.append(y_true[:, col])
         y_preds = np.array(y_preds)
@@ -52,8 +56,9 @@ class ExpRWKV():
                 "col": col, "num_shots": k,
                 "mae": mae, "mse": mse, "rmse": rmse, "mape": mape, "mspe": mspe}
 
-    def calc_generation_tokens(self, seq_y, col=0, redundant=5):
-        str_y = vec2str(seq_y[:, col])
+    def calc_generation_tokens(self, seq_y, col=0, redundant=5,
+                               precision=2, base=0, to_int=False):
+        str_y = vec2str(seq_y[:, col], precision=precision, base=base, to_int=to_int)
         token_y = self.pipeline.encode(str_y)
         return len(token_y) + redundant
 
@@ -61,17 +66,26 @@ class ExpRWKV():
         token_input = self.pipeline.encode(input_prompt)
         return len(token_input)
 
-    def run_one_univariate_predict(self, i, col=0, k=1):
-        kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k)
+    def run_one_univariate_predict(self, i, col=0, k=1, precision=2, base=0, to_int=False):
+        kshot_examples = get_univariate_kshot_examples(self.train_dataset, col=col, k=k,
+                                                        precision=precision, base=base,
+                                                        to_int=to_int)
+        print("examples:\n"+kshot_examples)
         seq_x, y_true = self.test_dataset[i]
-        input_prompt = get_input_prompt(seq_x, kshot_examples, col=col)
+        input_prompt = get_input_prompt(seq_x, kshot_examples, col=col,
+                                        precision=precision, base=base, to_int=to_int)
         num_tokens_to_generate = self.calc_generation_tokens(y_true, col=col, 
                                                              redundant=self.pred_len)
+        print("input_prompt:\n"+input_prompt)
         output_str = self.pipeline.greedy_generate(input_prompt, 
                                                    token_count=num_tokens_to_generate)
-        if is_valid_output_str(output_str, max_len=self.pred_len):
-                y_pred = output_str2list(output_str, max_len=self.pred_len)
+        print("output:\n"+output_str)
+        # a = output_str2list(output_str, max_len=self.pred_len, base=base, to_int=to_int)
+        # print(a)
+        if is_valid_output_str(output_str, max_len=self.pred_len, base=base, to_int=to_int):
+                y_pred = output_str2list(output_str, max_len=self.pred_len, base=base, to_int=to_int)
         else:
             print(f"{i} - invalid output_str: {output_str}")
             return None
+        print("y_pred:", y_pred[:5])
         return seq_x[:, 0], y_pred, y_true[:, col]
