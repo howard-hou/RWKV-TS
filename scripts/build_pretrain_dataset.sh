@@ -1,3 +1,5 @@
+# make jsonl_data dir if not exist
+mkdir -p jsonl_data
 python pretrain_to_jsonl.py data/ETT-small/ETTh1.csv jsonl_data/ETTh1.jsonl
 python pretrain_to_jsonl.py data/ETT-small/ETTm1.csv jsonl_data/ETTm1.jsonl
 python pretrain_to_jsonl.py data/electricity/electricity.csv jsonl_data/electricity.jsonl
