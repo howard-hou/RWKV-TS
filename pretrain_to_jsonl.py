@@ -5,8 +5,8 @@ https://github.com/Abel2076/json2binidx_tool/tree/main
 import json
 import argparse
 from pathlib import Path
-from ..dataloader import Dataset_ETT_hour
-from ..serialize import vec2str
+from dataloader import Dataset_ETT_hour
+from serialize import vec2str
 
 
 def process_univariate(dataset, to_int=False):
