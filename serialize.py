@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 
 PRECISION = 2 # constant
 

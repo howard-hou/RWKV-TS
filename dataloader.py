@@ -47,8 +47,7 @@ class Dataset_ETT_hour(Dataset):
         else:
             data = df_data.values
 
-        self.data_x = data[border1:border2]
-        self.data_y = data[border1:border2]
+        self.data = data[border1:border2]
     
     def __getitem__(self, index):
         s_begin = index
@@ -56,13 +55,13 @@ class Dataset_ETT_hour(Dataset):
         r_begin = s_end
         r_end = r_begin + self.pred_len
 
-        seq_x = self.data_x[s_begin:s_end]
-        seq_y = self.data_y[r_begin:r_end]
+        seq_x = self.data[s_begin:s_end]
+        seq_y = self.data[r_begin:r_end]
 
         return seq_x, seq_y
     
     def __len__(self):
-        return len(self.data_x) - self.input_len- self.pred_len + 1
+        return len(self.data) - self.input_len- self.pred_len + 1
 
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
