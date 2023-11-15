@@ -21,6 +21,8 @@ if __name__ == "__main__":
     parser.add_argument("--random_seed", default="-1", type=int)
 
     parser.add_argument("--data_dir", default="", type=str)
+    parser.add_argument("--data_type", default="utf-8", type=str)
+    parser.add_argument("--vocab_size", default=0, type=int)  # vocab_size = 0 means auto (for char-level LM and .txt data)
 
     parser.add_argument("--ctx_len", default=1024, type=int)
     parser.add_argument("--epoch_steps", default=1000, type=int)  # a mini "epoch" has [epoch_steps] steps
@@ -89,8 +91,9 @@ if __name__ == "__main__":
 
     ########################################################################################################
 
-    import os, warnings, math, datetime, sys, time
+    import os, warnings, math, datetime, sys, json
     import numpy as np
+    from pathlib import Path
     import torch
     from torch.utils.data import DataLoader
     if "deepspeed" in args.strategy:
@@ -114,7 +117,7 @@ if __name__ == "__main__":
     args.num_sanity_val_steps = 0
     args.check_val_every_n_epoch = int(1e20)
     args.log_every_n_steps = int(1e20)
-    args.max_epochs = -1  # continue forever
+    args.max_epochs = args.epoch_count  # -1 continue forever
     args.betas = (args.beta1, args.beta2)
     args.real_bsz = int(args.num_nodes) * int(args.devices) * args.micro_bsz
     os.environ["RWKV_MY_TESTING"] = args.my_testing
@@ -124,11 +127,7 @@ if __name__ == "__main__":
     if args.dim_ffn <= 0:
         args.dim_ffn = int((args.n_embd * 3.5) // 32 * 32) # default = 3.5x emb size
 
-    if args.data_type == "wds_img":
-        args.run_name = f"v{args.my_img_version}-{args.my_img_size}-{args.my_img_bit}bit-{args.my_img_clip}x{args.my_img_clip_scale}"
-        args.proj_dir = f"{args.proj_dir}-{args.run_name}"
-    else:
-        args.run_name = f"{args.vocab_size} ctx{args.ctx_len} L{args.n_layer} D{args.n_embd}"
+    args.run_name = f"{args.vocab_size} ctx{args.ctx_len} L{args.n_layer} D{args.n_embd}"
     if not os.path.exists(args.proj_dir):
         os.makedirs(args.proj_dir)
 
@@ -188,7 +187,7 @@ if __name__ == "__main__":
 #
 # RWKV-5 {args.precision.upper()} on {args.num_nodes}x{args.devices} {args.accelerator.upper()}, bsz {args.num_nodes}x{args.devices}x{args.micro_bsz}={args.real_bsz}, {args.strategy} {'with grad_cp' if args.grad_cp > 0 else ''}
 #
-# Data = {args.data_file} ({args.data_type}), ProjDir = {args.proj_dir}
+# Data = {args.data_dir} ({args.data_type}), ProjDir = {args.proj_dir}
 #
 # Epoch = {args.epoch_begin} to {args.epoch_begin + args.epoch_count - 1} (will continue afterwards), save every {args.epoch_save} epoch
 #
@@ -243,7 +242,7 @@ if __name__ == "__main__":
     ########################################################################################################
 
     from src.trainer import train_callback, generate_init_weight
-    from src.dataset import MyDataset
+    from src.dataset import MyDataset, TestDataset
 
     train_data = MyDataset(args)
 
@@ -306,6 +305,21 @@ if __name__ == "__main__":
         trainer.strategy.config["zero_optimization"]["reduce_bucket_size"] = args.ds_bucket_mb * 1000 * 1000
 
     # must set shuffle=False, persistent_workers=False (because worker is in another thread)
-    data_loader = DataLoader(train_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, num_workers=1, persistent_workers=False, drop_last=True)
+    data_loader = DataLoader(train_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, 
+                             num_workers=1, persistent_workers=False, drop_last=True)
 
     trainer.fit(model, data_loader)
+    # test model
+    test_files = Path(args.data_dir).glob('*.csv')
+    test_dict = []
+    for test_file in test_files:
+        args.data_file = test_file
+        test_data = TestDataset(args)
+        test_loader = DataLoader(test_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, 
+                                 num_workers=1, persistent_workers=False, drop_last=False)
+        trainer.test(model, test_loader)
+        test_res = model.test_results
+        test_res["dataset"] = test_file.stem
+        test_dict.append(test_res)
+    print(json.dumps(test_dict, indent=2, ensure_ascii=False))
+    json.dump(test_dict, open(f"{args.proj_dir}/test_log.json", "w"), indent=2, ensure_ascii=False)

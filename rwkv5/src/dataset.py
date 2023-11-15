@@ -21,8 +21,7 @@ class MyDataset(Dataset):
         self.dataset_names = [k for k in self.data]
         self.input_len = args.input_len
         self.pred_len = args.pred_len
-        rank_zero_info(f"Data has {len(self.data)} datasets, {self.data_size} rows,
-                       input_len={self.input_len}, pred_len={self.pred_len}")
+        rank_zero_info(f"Data has {len(self.data)} datasets, {self.data_size} rows, input_len={self.input_len}, pred_len={self.pred_len}")
         self.apply_standardization()
 
 
@@ -55,6 +54,36 @@ class MyDataset(Dataset):
 
         x = dataset[idx:idx+self.input_len]
         y = dataset[idx+self.input_len:idx+self.input_len+self.pred_len]
+
+        x = torch.from_numpy(x).float()
+        y = torch.from_numpy(y).float()
+
+        return x, y
+
+
+class TestDataset(Dataset):
+    def __init__(self, args):
+        self.args = args
+        self.data = self.load_data(args.data_file)
+        self.data_size = len(self.data)
+        self.input_len = args.input_len
+        self.pred_len = args.pred_len
+        rank_zero_info(f"Dataset {Path(args.data_file).stem}, Data has {self.data_size} rows, input_len={self.input_len}, pred_len={self.pred_len}")
+
+
+    def load_data(self, data_file):
+        data = pd.read_csv(data_file).select_dtypes(include=['float64', 'float32']).values
+        # use 90% of data for training, 10% for testing
+        data =  (data - data.mean(0)) / data.std(0)
+        data = data[int(len(data)*0.9):]
+        return data
+
+    def __len__(self):
+        return self.data_size - self.input_len - self.pred_len + 1
+
+    def __getitem__(self, idx):
+        x = self.data[idx:idx+self.input_len]
+        y = self.data[idx+self.input_len:idx+self.input_len+self.pred_len]
 
         x = torch.from_numpy(x).float()
         y = torch.from_numpy(y).float()

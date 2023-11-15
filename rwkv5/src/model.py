@@ -378,6 +378,22 @@ class RWKV(pl.LightningModule):
             all = self.all_gather(batch_parts)
             if self.trainer.is_global_zero:
                 self.trainer.my_loss_all = all
+    
+    def test_step(self, batch, batch_idx):
+        x, targets = batch
+        outputs = self(x)
+        mse_loss = F.mse_loss(outputs, targets)
+        mae_loss = F.l1_loss(outputs, targets)
+        return mse_loss, mae_loss
+    
+    def test_epoch_end(self, output_results):
+        # output_results is a list of tuples
+        mse_loss, mae_loss = zip(*output_results)
+        mse_loss = torch.stack(mse_loss).mean()
+        mae_loss = torch.stack(mae_loss).mean()
+        # self.log("mse_loss", mse_loss.item())
+        # self.log("mae_loss", mae_loss.item())
+        self.test_results = {"mse_loss": mse_loss.item(), "mae_loss": mae_loss.item()}
 
     def generate_init_weight(self):
         print(

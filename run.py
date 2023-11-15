@@ -5,8 +5,9 @@ from pathlib import Path
 # set these before import RWKV
 os.environ['RWKV_JIT_ON'] = '1'
 os.environ["RWKV_CUDA_ON"] = '0'
+os.environ["RWKV_HEAD_SIZE_A"] = '64'
 
-from rwkv.src.model import RWKV
+from rwkv5.src.model import RWKV
 
 from dataloader import Dataset_ETT_hour
 from pipeline import Pipeline
