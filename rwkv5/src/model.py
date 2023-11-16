@@ -384,16 +384,20 @@ class RWKV(pl.LightningModule):
         outputs = self(x)
         mse_loss = F.mse_loss(outputs, targets)
         mae_loss = F.l1_loss(outputs, targets)
-        return mse_loss, mae_loss
+        history = x[0].detach().cpu().numpy().tolist()
+        target = targets[0].detach().cpu().numpy().tolist()
+        pred = outputs[0].detach().cpu().numpy().tolist()
+        return mse_loss, mae_loss, history+target, history+pred
     
     def test_epoch_end(self, output_results):
         # output_results is a list of tuples
-        mse_loss, mae_loss = zip(*output_results)
+        mse_loss, mae_loss, y_true, y_pred = zip(*output_results)
         mse_loss = torch.stack(mse_loss).mean()
         mae_loss = torch.stack(mae_loss).mean()
         # self.log("mse_loss", mse_loss.item())
         # self.log("mae_loss", mae_loss.item())
-        self.test_results = {"mse_loss": mse_loss.item(), "mae_loss": mae_loss.item()}
+        self.test_results = {"mse_loss": mse_loss.item(), "mae_loss": mae_loss.item(),
+                             "y_true": y_true, "y_pred": y_pred}
 
     def generate_init_weight(self):
         print(
