@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--proj_dir", default="out", type=str)
     parser.add_argument("--random_seed", default="-1", type=int)
 
-    parser.add_argument("--data_dir", default="", type=str)
+    parser.add_argument("--data_file", default="", type=str)
     parser.add_argument("--data_type", default="utf-8", type=str)
     parser.add_argument("--vocab_size", default=0, type=int)  # vocab_size = 0 means auto (for char-level LM and .txt data)
 
@@ -73,11 +73,12 @@ if __name__ == "__main__":
     parser.add_argument("--my_exit", default=99999999, type=int)
     parser.add_argument("--my_exit_tokens", default=0, type=int)
 
-    parser.add_argument("--input_len", default=96, type=int)
-    parser.add_argument("--pred_len", default=24, type=int)
-    parser.add_argument("--patch_size", default=24, type=int)
-    parser.add_argument("--stride", default=24, type=int)
+    parser.add_argument("--input_len", default=336, type=int)
+    parser.add_argument("--pred_len", default=96, type=int)
+    parser.add_argument("--patch_size", default=16, type=int)
+    parser.add_argument("--stride", default=8, type=int)
     parser.add_argument("--freeze_blocks", default=0, type=int)
+    parser.add_argument("--test_mode", action="store_true")
 
     if pl.__version__[0]=='2':
         parser.add_argument("--accelerator", default="gpu", type=str)
@@ -188,7 +189,7 @@ if __name__ == "__main__":
 #
 # RWKV-5 {args.precision.upper()} on {args.num_nodes}x{args.devices} {args.accelerator.upper()}, bsz {args.num_nodes}x{args.devices}x{args.micro_bsz}={args.real_bsz}, {args.strategy} {'with grad_cp' if args.grad_cp > 0 else ''}
 #
-# Data = {args.data_dir} ({args.data_type}), ProjDir = {args.proj_dir}
+# Data = {args.data_file} ({args.data_type}), ProjDir = {args.proj_dir}
 #
 # Epoch = {args.epoch_begin} to {args.epoch_begin + args.epoch_count - 1} (will continue afterwards), save every {args.epoch_save} epoch
 #
@@ -309,18 +310,25 @@ if __name__ == "__main__":
     data_loader = DataLoader(train_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, 
                              num_workers=1, persistent_workers=False, drop_last=True)
 
-    trainer.fit(model, data_loader)
+    if not args.test_mode:
+        trainer.fit(model, data_loader)
     # test model
-    test_files = Path(args.data_dir).glob('*.csv')
-    test_dict = []
-    for test_file in test_files:
-        args.data_file = test_file
-        test_data = TestDataset(args)
-        test_loader = DataLoader(test_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, 
-                                 num_workers=1, persistent_workers=False, drop_last=False)
-        trainer.test(model, test_loader)
-        test_res = model.test_results
-        test_res["dataset"] = test_file.stem
-        test_dict.append(test_res)
-    print(json.dumps(test_dict, indent=2, ensure_ascii=False))
-    json.dump(test_dict, open(f"{args.proj_dir}/test_log.json", "w"), indent=2, ensure_ascii=False)
+    from plot_func import plot_multivariate_time_series
+    import pandas as pd
+
+    test_file = Path(args.data_file)
+    test_data = TestDataset(args)
+    test_loader = DataLoader(test_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz,
+                                num_workers=1, persistent_workers=False, drop_last=False)
+    trainer.test(model, test_loader)
+    test_res = model.test_results
+    test_res["dataset"] = test_file.stem
+    y_pred = test_res.pop("y_pred")
+    y_true = test_res.pop("y_true")
+    # select 10 samples to plot
+    for i in range(0, len(y_pred), step=len(y_pred)//10):
+        plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
+                                      f"{test_file.stem}_{i}", args.proj_dir)
+
+    print(json.dumps(test_res, indent=2, ensure_ascii=False))
+    json.dump(test_res, open(f"{args.proj_dir}/test_log.json", "w"), indent=2, ensure_ascii=False)

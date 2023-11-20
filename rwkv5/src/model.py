@@ -3,6 +3,7 @@
 ########################################################################################################
 
 import os, math, gc, importlib
+import numpy as np
 import torch
 # torch._C._jit_set_profiling_executor(True)
 # torch._C._jit_set_profiling_mode(True)
@@ -322,7 +323,7 @@ class RWKV(pl.LightningModule):
         self.ln_out = nn.LayerNorm(args.n_embd)
 
         self.ts_tokenizer = TimeSeriesTokenzier(args)
-        self.ts_head = nn.Linear(args.n_embd, args.pred_len, bias=False)
+        self.ts_head = nn.Linear(args.n_embd*self.ts_tokenizer.patch_num, args.pred_len, bias=False)
 
         if args.dropout > 0:
             self.drop0 = nn.Dropout(p = args.dropout)
@@ -355,31 +356,37 @@ class RWKV(pl.LightningModule):
     def forward(self, x):
         args = self.args
         B, T, M = x.size()
-
+        # apply ReInverse, very important
+        means = x.mean(1, keepdim=True).detach()
+        x = x - means
+        stdev = torch.sqrt(torch.var(x, dim=1, keepdim=True, unbiased=False)+ 1e-5).detach() 
+        x /= stdev
 
         # convert time series to tokens
-        x, r_loss = self.ts_tokenizer(x) # [B*M, N, D]
+        x = self.ts_tokenizer(x) # [B*M, N, D]
+
+        # apply dropout
+        if args.dropout > 0:
+            x = self.drop0(x)
 
         for block in self.blocks:
             x = block(x)
 
         x = self.ln_out(x)
 
-        x = self.ts_head(x) # [B*M, N, P]
+        x = self.ts_head(x.view(B*M, -1)) # [B*M, P]
 
-        return x, r_loss
+        # apply inverse ReInverse
+        x = x.view(B, -1, M) * stdev + means
+
+        return x
+    
 
     def training_step(self, batch, batch_idx):
         x, targets = batch
-        outputs, r_loss = self(x) # [B*M, N, P]
-        # prepare targets
-        # BM, N, P = outputs.size()
-        # x = x.view(BM, N, P)[:, 1:, :] # [B*M, N-1, P]
-        # targets = targets.view(BM, 1, P) # [B*M, 1, P]
-        # targets = torch.cat([x, targets], dim=1) # [B*M, N, P]
-        # compute loss
+        outputs = self(x) # [B*M, P]
         loss = F.mse_loss(outputs, targets)
-        return loss + r_loss
+        return loss
 
     def training_step_end(self, batch_parts):
         if pl.__version__[0]!='2':
@@ -389,21 +396,25 @@ class RWKV(pl.LightningModule):
     
     def test_step(self, batch, batch_idx):
         x, targets = batch
-        outputs, _ = self(x)
-        B, P, M = targets.shape
-        predicts = outputs[:, -1, :].reshape(B, P, M)
-        mse_loss = F.mse_loss(predicts, targets)
-        mae_loss = F.l1_loss(predicts, targets)
-        return mse_loss, mae_loss
-    
+        outputs = self(x)
+        mse_loss = F.mse_loss(outputs, targets)
+        mae_loss = F.l1_loss(outputs, targets)
+        history = x[0].detach().cpu().float().numpy()
+        target = targets[0].detach().cpu().float().numpy()
+        pred = outputs[0].detach().cpu().float().numpy()
+        y_true = np.concatenate((history, target))
+        y_pred = np.concatenate((history, pred))
+        return mse_loss, mae_loss, y_true, y_pred
+
+
     def test_epoch_end(self, output_results):
         # output_results is a list of tuples
-        mse_loss, mae_loss = zip(*output_results)
+        mse_loss, mae_loss, y_true, y_pred = zip(*output_results)
         mse_loss = torch.stack(mse_loss).mean()
         mae_loss = torch.stack(mae_loss).mean()
-        # self.log("mse_loss", mse_loss.item())
-        # self.log("mae_loss", mae_loss.item())
-        self.test_results = {"mse_loss": mse_loss.item(), "mae_loss": mae_loss.item()}
+        self.test_results = {"mse_loss": mse_loss.item(), "mae_loss": mae_loss.item(),
+                             "y_true": y_true, "y_pred": y_pred}
+        
 
     def generate_init_weight(self):
         print(
@@ -484,12 +495,12 @@ class TimeSeriesTokenzier(nn.Module):
 
         # RuntimeError: "replication_pad1d_cuda" not implemented for 'BFloat16'
         # to check in the future, now just disable it
+        # one easy way to solve is x = self.padding_patch_layer(x.float()).bfloat16()
+        # but it seems useless
         # self.padding_patch_layer = nn.ReplicationPad1d((0, self.stride)) 
         # self.patch_num += 1
         
         self.in_layer = nn.Linear(configs.patch_size, configs.n_embd, bias=False)
-        self.reconstruction_layer = nn.Linear(configs.n_embd, configs.patch_size, bias=False)
-        self.reconstruction_loss = nn.MSELoss()
 
     def forward(self, x):
         x = rearrange(x, 'b l m -> b m l')
@@ -498,7 +509,5 @@ class TimeSeriesTokenzier(nn.Module):
         x = rearrange(x, 'b m n p -> (b m) n p')
 
         tokens = self.in_layer(x) # [B*M, T, D]
-        reconstruction_x = self.reconstruction_layer(tokens) # [B*M, T, P]
-        reconstruction_loss = self.reconstruction_loss(reconstruction_x, x)
-        return tokens, reconstruction_loss
+        return tokens
 
