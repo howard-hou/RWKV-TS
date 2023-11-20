@@ -355,6 +355,8 @@ class RWKV(pl.LightningModule):
     def forward(self, x):
         args = self.args
         B, T, M = x.size()
+
+
         # convert time series to tokens
         x, r_loss = self.ts_tokenizer(x) # [B*M, N, D]
 
