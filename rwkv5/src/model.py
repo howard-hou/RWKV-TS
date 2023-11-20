@@ -329,13 +329,14 @@ class RWKV(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        # freeze blocks
-        for i in range(len(self.blocks)):
-            for name, p in self.blocks[i].named_parameters():
-                if 'ln' in name:
-                    p.requires_grad = True
-                else:
-                    p.requires_grad = False 
+        if self.args.freeze_blocks:
+            # freeze blocks
+            for i in range(len(self.blocks)):
+                for name, p in self.blocks[i].named_parameters():
+                    if 'ln' in name:
+                        p.requires_grad = True
+                    else:
+                        p.requires_grad = False 
 
         trainable_params = [p for p in self.parameters() if p.requires_grad]
         optim_groups = [{"params": trainable_params, "weight_decay": self.args.weight_decay, "my_lr_scale": 1.0}]
@@ -354,24 +355,29 @@ class RWKV(pl.LightningModule):
     def forward(self, x):
         args = self.args
         B, T, M = x.size()
-        assert T <= args.ctx_len, "Cannot forward, model ctx_len is exhausted."
-
-        x = self.ts_tokenizer(x) # [B*M, T, D]
+        # convert time series to tokens
+        x, r_loss = self.ts_tokenizer(x) # [B*M, N, D]
 
         for block in self.blocks:
             x = block(x)
 
         x = self.ln_out(x)
 
-        x = self.ts_head(x[:, -1, :])
+        x = self.ts_head(x) # [B*M, N, P]
 
-        return x.view(B, -1, M)
+        return x, r_loss
 
     def training_step(self, batch, batch_idx):
         x, targets = batch
-        outputs = self(x)
+        outputs, r_loss = self(x) # [B*M, N, P]
+        # prepare targets
+        # BM, N, P = outputs.size()
+        # x = x.view(BM, N, P)[:, 1:, :] # [B*M, N-1, P]
+        # targets = targets.view(BM, 1, P) # [B*M, 1, P]
+        # targets = torch.cat([x, targets], dim=1) # [B*M, N, P]
+        # compute loss
         loss = F.mse_loss(outputs, targets)
-        return loss
+        return loss + r_loss
 
     def training_step_end(self, batch_parts):
         if pl.__version__[0]!='2':
@@ -381,9 +387,11 @@ class RWKV(pl.LightningModule):
     
     def test_step(self, batch, batch_idx):
         x, targets = batch
-        outputs = self(x)
-        mse_loss = F.mse_loss(outputs, targets)
-        mae_loss = F.l1_loss(outputs, targets)
+        outputs, _ = self(x)
+        B, P, M = targets.shape
+        predicts = outputs[:, -1, :].reshape(B, P, M)
+        mse_loss = F.mse_loss(predicts, targets)
+        mae_loss = F.l1_loss(predicts, targets)
         return mse_loss, mae_loss
     
     def test_epoch_end(self, output_results):
@@ -478,6 +486,8 @@ class TimeSeriesTokenzier(nn.Module):
         # self.patch_num += 1
         
         self.in_layer = nn.Linear(configs.patch_size, configs.n_embd, bias=False)
+        self.reconstruction_layer = nn.Linear(configs.n_embd, configs.patch_size, bias=False)
+        self.reconstruction_loss = nn.MSELoss()
 
     def forward(self, x):
         x = rearrange(x, 'b l m -> b m l')
@@ -486,5 +496,7 @@ class TimeSeriesTokenzier(nn.Module):
         x = rearrange(x, 'b m n p -> (b m) n p')
 
         tokens = self.in_layer(x) # [B*M, T, D]
-        return tokens
+        reconstruction_x = self.reconstruction_layer(tokens) # [B*M, T, P]
+        reconstruction_loss = self.reconstruction_loss(reconstruction_x, x)
+        return tokens, reconstruction_loss
 

@@ -75,8 +75,9 @@ if __name__ == "__main__":
 
     parser.add_argument("--input_len", default=96, type=int)
     parser.add_argument("--pred_len", default=24, type=int)
-    parser.add_argument("--patch_size", default=16, type=int)
-    parser.add_argument("--stride", default=8, type=int)
+    parser.add_argument("--patch_size", default=24, type=int)
+    parser.add_argument("--stride", default=24, type=int)
+    parser.add_argument("--freeze_blocks", default=0, type=int)
 
     if pl.__version__[0]=='2':
         parser.add_argument("--accelerator", default="gpu", type=str)
