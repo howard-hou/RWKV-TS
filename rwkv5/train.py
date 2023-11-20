@@ -326,7 +326,7 @@ if __name__ == "__main__":
     y_pred = test_res.pop("y_pred")
     y_true = test_res.pop("y_true")
     # select 10 samples to plot
-    for i in range(0, len(y_pred), step=len(y_pred)//10):
+    for i in range(0, len(y_pred), len(y_pred)//10):
         plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
                                       f"{test_file.stem}_{i}", args.proj_dir)
 
