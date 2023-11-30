@@ -77,6 +77,9 @@ if __name__ == "__main__":
     parser.add_argument("--pred_len", default=96, type=int)
     parser.add_argument("--patch_size", default=16, type=int)
     parser.add_argument("--stride", default=8, type=int)
+    parser.add_argument("--mode", default="M2M", type=str)
+    parser.add_argument("--n_features", default=8, type=int)
+    parser.add_argument("--target_column", default=-1, type=int)
     parser.add_argument("--freeze_blocks", default=0, type=int)
     parser.add_argument("--test_mode", action="store_true")
 

@@ -19,12 +19,14 @@ class MyDataset(Dataset):
         self.data_size = len(self.data)
         self.input_len = args.input_len
         self.pred_len = args.pred_len
+        self.target_column = args.target_column
         rank_zero_info(f"Data have {self.data_size} rows, input_len={self.input_len}, pred_len={self.pred_len}")
 
 
     def load_data(self, data_file):
         name = Path(data_file).stem
-        data = pd.read_csv(data_file).select_dtypes(include=['float64', 'float32']).values
+        data = pd.read_csv(data_file).select_dtypes(include=['float64', 'float32'])
+        data = data.interpolate().values
         # split data into train and test by dataset name
         if name.startswith('ETTh'): # 1 year
             data = data[:12 * 30 * 24]
@@ -32,7 +34,7 @@ class MyDataset(Dataset):
             data = data[:12 * 30 * 24 * 4]
         else: # 70% of data for training
             data = data[:int(len(data)*0.7)]
-        data = (data - data.mean(0)) / data.std(0)
+        data = (data - np.nanmean(data, axis=0)) / np.nanstd(data, axis=0)
         return data
 
 
@@ -49,6 +51,8 @@ class MyDataset(Dataset):
 
         x = torch.from_numpy(x).float()
         y = torch.from_numpy(y).float()
+        if self.target_column >= 0:
+            y = y[:, self.target_column]
 
         return x, y
 
@@ -60,11 +64,13 @@ class TestDataset(Dataset):
         self.pred_len = args.pred_len
         self.data = self.load_data(args.data_file)
         self.data_size = len(self.data)
+        self.target_column = args.target_column
         rank_zero_info(f"Dataset {Path(args.data_file).stem}, Data has {self.data_size} rows, input_len={self.input_len}, pred_len={self.pred_len}")
 
 
     def load_data(self, data_file):
-        data = pd.read_csv(data_file).select_dtypes(include=['float64', 'float32']).values
+        data = pd.read_csv(data_file).select_dtypes(include=['float64', 'float32'])
+        data = data.interpolate().values
         name = Path(self.args.data_file).stem
         # split data into train and test by dataset name
         if name.startswith('ETTh'): # 1 year
@@ -76,7 +82,7 @@ class TestDataset(Dataset):
         else: # 70% of data for training
             train_data  = data[:int(len(data)*0.7)]
             test_data = data[-int(len(data)*0.2):]
-        data = (test_data - train_data.mean(0)) / train_data.std(0)
+        data = (test_data - np.nanmean(train_data, axis=0)) / np.nanstd(train_data, axis=0)
         return data
 
     def __len__(self):
@@ -88,5 +94,7 @@ class TestDataset(Dataset):
 
         x = torch.from_numpy(x).float()
         y = torch.from_numpy(y).float()
+        if self.target_column >= 0:
+            y = y[:, self.target_column]
 
         return x, y

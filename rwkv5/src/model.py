@@ -324,6 +324,8 @@ class RWKV(pl.LightningModule):
 
         self.ts_tokenizer = TimeSeriesTokenzier(args)
         self.ts_head = nn.Linear(args.n_embd*self.ts_tokenizer.patch_num, args.pred_len, bias=False)
+        self.mode = args.mode
+        self.target_column = args.target_column
 
         if args.dropout > 0:
             self.drop0 = nn.Dropout(p = args.dropout)
@@ -356,28 +358,38 @@ class RWKV(pl.LightningModule):
     def forward(self, x):
         args = self.args
         B, T, M = x.size()
+
         # apply ReInverse, very important
         means = x.mean(1, keepdim=True).detach()
         x = x - means
         stdev = torch.sqrt(torch.var(x, dim=1, keepdim=True, unbiased=False)+ 1e-5).detach() 
         x /= stdev
 
-        # convert time series to tokens
-        x = self.ts_tokenizer(x) # [B*M, N, D]
+        if self.mode == "M2M":
+            # convert time series to tokens
+            x = self.ts_tokenizer(x) # [B*M, N, D]
+            # apply dropout
+            if args.dropout > 0:
+                x = self.drop0(x)
 
-        # apply dropout
-        if args.dropout > 0:
-            x = self.drop0(x)
+            for block in self.blocks:
+                x = block(x)
+            x = self.ln_out(x)
+            x = self.ts_head(x.view(B*M, -1)) # [B*M, P]
+            # apply inverse ReInverse
+            x = x.view(B, -1, M) * stdev + means
+        elif self.mode == "M2S":
+            x = self.ts_tokenizer(x) # [B, N, M*D]
+            # apply dropout
+            if args.dropout > 0:
+                x = self.drop0(x)
 
-        for block in self.blocks:
-            x = block(x)
-
-        x = self.ln_out(x)
-
-        x = self.ts_head(x.view(B*M, -1)) # [B*M, P]
-
-        # apply inverse ReInverse
-        x = x.view(B, -1, M) * stdev + means
+            for block in self.blocks:
+                x = block(x)
+            x = self.ln_out(x)
+            x = self.ts_head(x.view(B, -1)) # [B, P]
+            # apply inverse ReInverse on target column
+            x = x * stdev[:, :, self.target_column] + means[:, :, self.target_column]
 
         return x
     
@@ -400,6 +412,8 @@ class RWKV(pl.LightningModule):
         mse_loss = F.mse_loss(outputs, targets)
         mae_loss = F.l1_loss(outputs, targets)
         history = x[0].detach().cpu().float().numpy()
+        if self.target_column >= 0:
+            history = history[:, self.target_column]
         target = targets[0].detach().cpu().float().numpy()
         pred = outputs[0].detach().cpu().float().numpy()
         y_true = np.concatenate((history, target))
@@ -489,6 +503,7 @@ class RWKV(pl.LightningModule):
 class TimeSeriesTokenzier(nn.Module):
     def __init__(self, configs):
         super().__init__()
+        self.mode = configs.mode
         self.patch_size = configs.patch_size
         self.stride = configs.stride
         self.patch_num = (configs.input_len - self.patch_size) // self.stride + 1
@@ -499,15 +514,23 @@ class TimeSeriesTokenzier(nn.Module):
         # but it seems useless
         # self.padding_patch_layer = nn.ReplicationPad1d((0, self.stride)) 
         # self.patch_num += 1
-        
-        self.in_layer = nn.Linear(configs.patch_size, configs.n_embd, bias=False)
+        if self.mode == "M2M":
+            self.in_layer = nn.Linear(configs.patch_size, configs.n_embd, bias=False)
+        elif self.mode == "M2S":
+            self.in_layer = nn.Linear(configs.patch_size * configs.n_features, configs.n_embd, bias=False)
+        else:
+            raise "mode not supported"
 
     def forward(self, x):
         x = rearrange(x, 'b l m -> b m l')
-
         x = x.unfold(dimension=-1, size=self.patch_size, step=self.stride)
-        x = rearrange(x, 'b m n p -> (b m) n p')
-
-        tokens = self.in_layer(x) # [B*M, T, D]
+        if self.mode == "M2M":
+            x = rearrange(x, 'b m n p -> (b m) n p')
+            tokens = self.in_layer(x) # [B*M, T, D]
+        elif self.mode == "M2S":
+            x = rearrange(x, 'b m n p -> b n (m p)')
+            tokens = self.in_layer(x)
+        else:
+            raise "mode not supported"
         return tokens
 
