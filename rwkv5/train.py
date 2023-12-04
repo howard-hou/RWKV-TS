@@ -310,13 +310,14 @@ if __name__ == "__main__":
         trainer.strategy.config["zero_optimization"]["reduce_bucket_size"] = args.ds_bucket_mb * 1000 * 1000
 
     # must set shuffle=False, persistent_workers=False (because worker is in another thread)
-    data_loader = DataLoader(train_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, 
+    # shuffle 必须为True，否则梯度不稳定，啥都学不到
+    data_loader = DataLoader(train_data, shuffle=True, pin_memory=True, batch_size=args.micro_bsz, 
                              num_workers=1, persistent_workers=False, drop_last=True)
 
     if not args.test_mode:
         trainer.fit(model, data_loader)
     # test model
-    from plot_func import plot_multivariate_time_series
+    from plot_func import plot_multivariate_time_series, plot_univariate_time_series
     import pandas as pd
 
     test_file = Path(args.data_file)
@@ -328,10 +329,24 @@ if __name__ == "__main__":
     test_res["dataset"] = test_file.stem
     y_pred = test_res.pop("y_pred")
     y_true = test_res.pop("y_true")
-    # select 10 samples to plot
-    for i in range(0, len(y_pred), len(y_pred)//10):
-        plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
-                                      f"{test_file.stem}_{i}", args.proj_dir)
+    # select 5 samples to plot
+    if args.mode == "M2M":
+        for i in range(0, len(y_pred), len(y_pred)//5):
+            plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
+                                          f"{test_file.stem}_{i}_predlen", args.proj_dir, plot_len=args.pred_len)
+            plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
+                                          f"{test_file.stem}_{i}_double-predlen", args.proj_dir, plot_len=2*args.pred_len)
+            plot_multivariate_time_series(pd.DataFrame(y_pred[i]), pd.DataFrame(y_true[i]),
+                                            f"{test_file.stem}_{i}_fulllen", args.proj_dir, plot_len=args.input_len+args.pred_len)
+    else:
+        list_pred_df = [pd.DataFrame(y_pred[i]) for i in range(0, len(y_pred), len(y_pred)//5)]
+        list_true_df = [pd.DataFrame(y_true[i]) for i in range(0, len(y_true), len(y_true)//5)]
+        plot_univariate_time_series(list_pred_df, list_true_df, f"{test_file.stem}_predlen", args.proj_dir, 
+                                    plot_len=args.pred_len)
+        plot_univariate_time_series(list_pred_df, list_true_df, f"{test_file.stem}_double-predlen", args.proj_dir, 
+                                    plot_len=2*args.pred_len)
+        plot_univariate_time_series(list_pred_df, list_true_df, f"{test_file.stem}_fulllen", args.proj_dir, 
+                                    plot_len=args.input_len+args.pred_len)
 
     print(json.dumps(test_res, indent=2, ensure_ascii=False))
     json.dump(test_res, open(f"{args.proj_dir}/test_log.json", "w"), indent=2, ensure_ascii=False)

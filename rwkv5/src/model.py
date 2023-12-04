@@ -324,6 +324,8 @@ class RWKV(pl.LightningModule):
 
         self.ts_tokenizer = TimeSeriesTokenzier(args)
         self.ts_head = nn.Linear(args.n_embd*self.ts_tokenizer.patch_num, args.pred_len, bias=False)
+        self.mean_head = nn.Linear(args.n_embd, 1, bias=False)
+        self.stdev_head = nn.Linear(args.n_embd, 1, bias=False)
         self.mode = args.mode
         self.target_column = args.target_column
 
@@ -387,10 +389,13 @@ class RWKV(pl.LightningModule):
             for block in self.blocks:
                 x = block(x)
             x = self.ln_out(x)
+            delta_mean = self.mean_head(x[:, -1, :]) # [B, 1]
+            delta_stdev = self.stdev_head(x[:, -1, :]) # [B, 1]
             x = self.ts_head(x.view(B, -1)) # [B, P]
             # apply inverse ReInverse on target column
-            x = x * stdev[:, :, self.target_column] + means[:, :, self.target_column]
-
+            means = means[:, :, self.target_column] * delta_mean
+            stdev = stdev[:, :, self.target_column] * delta_stdev
+            x = x * stdev + means
         return x
     
 
