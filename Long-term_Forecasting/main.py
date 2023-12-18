@@ -102,6 +102,8 @@ for ii in range(args.itr):
 
     setting = '{}_sl{}_pl{}_dm{}_nh{}_gl{}_itr{}'.format(args.model_id, args.seq_len, args.pred_len,
                                                         args.d_model, args.n_heads, args.gpt_layers, ii)
+    print("######################################################")
+    print(setting)
     path = os.path.join(args.checkpoints, setting)
     if not os.path.exists(path):
         os.makedirs(path)
