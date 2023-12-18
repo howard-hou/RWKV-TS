@@ -1,5 +1,5 @@
 seq_len=512
-model=GPT4TS
+model=RWKV4TS
 
 for percent in 100
 do

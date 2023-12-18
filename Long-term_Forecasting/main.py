@@ -4,6 +4,7 @@ from tqdm import tqdm
 from models.PatchTST import PatchTST
 from models.GPT4TS import GPT4TS
 from models.DLinear import DLinear
+from models.RWKV4TS import RWKV4TS
 
 
 import numpy as np
@@ -99,9 +100,8 @@ maes = []
 
 for ii in range(args.itr):
 
-    setting = '{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_gl{}_df{}_eb{}_itr{}'.format(args.model_id, 336, args.label_len, args.pred_len,
-                                                                    args.d_model, args.n_heads, args.e_layers, args.gpt_layers, 
-                                                                    args.d_ff, args.embed, ii)
+    setting = '{}_sl{}_pl{}_dm{}_nh{}_gl{}_itr{}'.format(args.model_id, args.seq_len, args.pred_len,
+                                                        args.d_model, args.n_heads, args.gpt_layers, ii)
     path = os.path.join(args.checkpoints, setting)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -128,6 +128,8 @@ for ii in range(args.itr):
     elif args.model == 'DLinear':
         model = DLinear(args, device)
         model.to(device)
+    elif args.model == "RWKV4TS":
+        model = RWKV4TS(args, device)
     else:
         model = GPT4TS(args, device)
     # mse, mae = test(model, test_data, test_loader, args, device, ii)
@@ -207,6 +209,7 @@ for ii in range(args.itr):
     mse, mae = test(model, test_data, test_loader, args, device, ii)
     mses.append(mse)
     maes.append(mae)
+
 
 mses = np.array(mses)
 maes = np.array(maes)

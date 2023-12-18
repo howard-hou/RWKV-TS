@@ -210,7 +210,6 @@ class RWKV4TS(nn.Module):
     
     def __init__(self, configs, device):
         super(RWKV4TS, self).__init__()
-        self.is_gpt = configs.is_gpt
         self.patch_size = configs.patch_size
         self.pretrain = configs.pretrain
         self.stride = configs.stride
@@ -219,15 +218,15 @@ class RWKV4TS(nn.Module):
         self.padding_patch_layer = nn.ReplicationPad1d((0, self.stride)) 
         self.patch_num += 1
         
-        if configs.is_gpt:
-            if configs.pretrain:
-                raise NotImplementedError
-            else:
-                print("------------------no pretrain------------------")
-                config = RWKVConfig()
-                self.rwkv = nn.ModuleList([Block(config, i) for i in range(config.n_layer)])
-            # self.gpt2.h = self.gpt2.h[:configs.gpt_layers]
-            print("rwkv = {}".format(self.rwkv))
+        if configs.pretrain:
+            raise NotImplementedError
+        else:
+            print("------------------no pretrain------------------")
+            rwkv_config = RWKVConfig(n_layer=configs.gpt_layers, 
+                                     n_head=configs.n_heads, 
+                                     n_embd=configs.d_model)
+            self.rwkv = nn.ModuleList([Block(rwkv_config, i) for i in range(rwkv_config.n_layer)])
+        print("rwkv = {}".format(self.rwkv))
         
         self.in_layer = nn.Linear(configs.patch_size, configs.d_model)
         self.out_layer = nn.Linear(configs.d_model * self.patch_num, configs.pred_len)
