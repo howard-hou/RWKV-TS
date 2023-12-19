@@ -1,11 +1,6 @@
 import argparse
-import os
 import torch
-# from exp.exp_long_term_forecasting import Exp_Long_Term_Forecast
-# from exp.exp_imputation import Exp_Imputation
 from exp.exp_short_term_forecasting import Exp_Short_Term_Forecast
-# from exp.exp_anomaly_detection import Exp_Anomaly_Detection
-# from exp.exp_classification import Exp_Classification
 import random
 import numpy as np
 
@@ -14,7 +9,7 @@ random.seed(fix_seed)
 torch.manual_seed(fix_seed)
 np.random.seed(fix_seed)
 
-parser = argparse.ArgumentParser(description='TimesNet')
+parser = argparse.ArgumentParser(description='RWKV4TS')
 
 # basic config
 parser.add_argument('--task_name', type=str, required=True, default='long_term_forecast',
@@ -22,7 +17,7 @@ parser.add_argument('--task_name', type=str, required=True, default='long_term_f
 parser.add_argument('--is_training', type=int, required=True, default=1, help='status')
 parser.add_argument('--model_id', type=str, required=True, default='test', help='model id')
 parser.add_argument('--model', type=str, required=True, default='Autoformer',
-                    help='model name, options: [Autoformer, Transformer, TimesNet]')
+                    help='model name, options: [Autoformer, Transformer, RWKV4TS]')
 
 # data loader
 parser.add_argument('--data', type=str, required=True, default='ETTm1', help='dataset type')
@@ -113,18 +108,11 @@ if args.use_gpu and args.use_multi_gpu:
 print('Args in experiment:')
 print(args)
 
-if args.task_name == 'long_term_forecast':
-    Exp = Exp_Long_Term_Forecast
-elif args.task_name == 'short_term_forecast':
+
+if args.task_name == 'short_term_forecast':
     Exp = Exp_Short_Term_Forecast
-elif args.task_name == 'imputation':
-    Exp = Exp_Imputation
-elif args.task_name == 'anomaly_detection':
-    Exp = Exp_Anomaly_Detection
-elif args.task_name == 'classification':
-    Exp = Exp_Classification
 else:
-    Exp = Exp_Long_Term_Forecast
+    raise NotImplementedError
 
 if args.is_training:
     for ii in range(args.itr):

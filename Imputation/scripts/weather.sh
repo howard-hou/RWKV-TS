@@ -1,4 +1,4 @@
-model_name=GPT4TS
+model_name=RWKV4TS
 
 python -u run.py \
   --task_name imputation \
@@ -15,8 +15,9 @@ python -u run.py \
   --pred_len 0 \
   --patch_size 1 \
   --stride 1 \
-  --gpt_layer 3 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --enc_in 21 \
   --dec_in 21 \
   --c_out 21 \
@@ -45,8 +46,9 @@ python -u run.py \
   --batch_size 16 \
   --patch_size 1 \
   --stride 1 \
-  --gpt_layer 3 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --des 'Exp' \
   --itr 3 \
   --train_epochs 30 \
@@ -71,8 +73,9 @@ python -u run.py \
   --batch_size 16 \
   --patch_size 1 \
   --stride 1 \
-  --gpt_layer 3 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --des 'Exp' \
   --itr 3 \
   --train_epochs 30 \
@@ -97,8 +100,9 @@ python -u run.py \
   --batch_size 16 \
   --patch_size 1 \
   --stride 1 \
-  --gpt_layer 3 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --des 'Exp' \
   --itr 3 \
   --train_epochs 30 \

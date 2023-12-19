@@ -2,7 +2,7 @@ import os
 import torch
 # from models import Autoformer, Transformer, TimesNet, Nonstationary_Transformer, DLinear, FEDformer, \
 #     Informer, LightTS, Reformer, ETSformer, Pyraformer, PatchTST, MICN
-from models import GPT4TS
+from models import GPT4TS, RWKV4TS
 
 
 class Exp_Basic(object):
@@ -23,6 +23,7 @@ class Exp_Basic(object):
             # 'Pyraformer': Pyraformer,
             # 'MICN': MICN,
             'GPT4TS': GPT4TS,
+            'RWKV4TS': RWKV4TS,
         }
         self.device = self._acquire_device()
         self.model = self._build_model().to(self.device)

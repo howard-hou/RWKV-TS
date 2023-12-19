@@ -1,4 +1,4 @@
-model_name=GPT4TS
+model_name=RWKV4TS
 
 python -u run.py \
   --task_name short_term_forecast \
@@ -12,9 +12,10 @@ python -u run.py \
   --enc_in 1 \
   --dec_in 1 \
   --c_out 1 \
-  --gpt_layer 6 \
+  --gpt_layer 2 \
   --d_ff 128 \
   --d_model 128 \
+  --n_heads 2 \
   --patch_size 1 \
   --stride 1 \
   --batch_size 16 \
@@ -36,8 +37,9 @@ python -u run.py \
   --dec_in 1 \
   --c_out 1 \
   --ln 1 \
-  --gpt_layer 6 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --d_ff 32 \
   --patch_size 1 \
   --stride 1 \
@@ -59,8 +61,9 @@ python -u run.py \
   --enc_in 1 \
   --dec_in 1 \
   --c_out 1 \
-  --gpt_layer 6 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --patch_size 1 \
   --stride 1 \
   --d_ff 128 \
@@ -82,8 +85,9 @@ python -u run.py \
   --enc_in 1 \
   --dec_in 1 \
   --c_out 1 \
-  --gpt_layer 6 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --d_ff 128 \
   --patch_size 1 \
   --stride 1 \
@@ -105,8 +109,9 @@ python -u run.py \
   --enc_in 1 \
   --dec_in 1 \
   --c_out 1 \
-  --gpt_layer 6 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --d_ff 128 \
   --patch_size 1 \
   --stride 1 \
@@ -128,8 +133,9 @@ python -u run.py \
   --enc_in 1 \
   --dec_in 1 \
   --c_out 1 \
-  --gpt_layer 6 \
-  --d_model 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
   --d_ff 128 \
   --patch_size 1 \
   --stride 1 \
