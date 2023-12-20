@@ -5,14 +5,15 @@ python -u run.py \
   --is_training 1 \
   --root_path ./dataset/SMD \
   --model_id SMD \
-  --model GPT4TS \
+  --model RWKV4TS \
   --data SMD \
   --features M \
   --seq_len 100 \
   --pred_len 0 \
-  --d_model 768 \
-  --d_ff 768 \
-  --gpt_layer 6 \
+  --d_model 128 \
+  --n_heads 2 \
+  --d_ff 128 \
+  --gpt_layer 2 \
   --enc_in 38 \
   --c_out 38 \
   --anomaly_ratio 0.5 \

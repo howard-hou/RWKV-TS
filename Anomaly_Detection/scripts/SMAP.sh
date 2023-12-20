@@ -5,14 +5,15 @@ python -u run.py \
   --is_training 1 \
   --root_path ./dataset/SMAP \
   --model_id SMAP \
-  --model GPT4TS \
+  --model RWKV4TS \
   --data SMAP \
   --features M \
   --seq_len 100 \
   --pred_len 0 \
-  --gpt_layer 6 \
-  --d_model 768 \
-  --d_ff 768 \
+  --gpt_layer 2 \
+  --d_model 128 \
+  --n_heads 2 \
+  --d_ff 128 \
   --patch_size 1 \
   --stride 1 \
   --enc_in 25 \
