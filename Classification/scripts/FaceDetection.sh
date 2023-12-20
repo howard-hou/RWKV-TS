@@ -9,8 +9,8 @@ python src/main.py \
     --val_pattern TEST \
     --epochs 50 \
     --lr 0.001 \
-    --patch_size 8 \
-    --stride 8 \
+    --patch_size 16 \
+    --stride 16 \
     --optimizer RAdam \
     --d_model 128 \
     --dropout 0.1 \
