@@ -1,9 +1,9 @@
 python src/main.py \
     --output_dir experiments \
     --comment "classification from Scratch" \
-    --name EthanolConcentration \
+    --name UWaveGestureLibrary \
     --records_file Classification_records.xls \
-    --data_dir ./datasets/EthanolConcentration \
+    --data_dir ./datasets/UWaveGestureLibrary \
     --data_class tsra \
     --pattern TRAIN \
     --val_pattern TEST \

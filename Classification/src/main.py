@@ -32,6 +32,7 @@ from datasets.data import data_factory, Normalizer
 from datasets.datasplit import split_dataset
 from models.ts_transformer import model_factory
 from models.gpt4ts import gpt4ts
+from models.RWKV4TS import RWKV4TS
 from models.loss import get_loss_module
 from optimizers import get_optimizer
 
@@ -51,6 +52,12 @@ def main(config):
 
     if config['seed'] is not None:
         torch.manual_seed(config['seed'])
+        torch.cuda.manual_seed(config['seed'])
+        torch.backends.cudnn.deterministic = True
+        import numpy as np
+        np.random.seed(int(config['seed']))
+        import random
+        random.seed(config['seed'])
 
     device = torch.device('cuda' if (torch.cuda.is_available() and config['gpu'] != '-1') else 'cpu')
     logger.info("Using device: {}".format(device))
@@ -143,7 +150,8 @@ def main(config):
     # Create model
     logger.info("Creating model ...")
     # model = model_factory(config, my_data)
-    model = gpt4ts(config, my_data)
+    # model = gpt4ts(config, my_data)
+    model = RWKV4TS(config, my_data)
 
     if config['freeze']:
         for name, param in model.named_parameters():

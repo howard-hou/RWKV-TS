@@ -1,9 +1,9 @@
 python src/main.py \
     --output_dir experiments \
     --comment "classification from Scratch" \
-    --name EthanolConcentration \
+    --name PEMS-SF \
     --records_file Classification_records.xls \
-    --data_dir ./datasets/EthanolConcentration \
+    --data_dir ./datasets/PEMS-SF \
     --data_class tsra \
     --pattern TRAIN \
     --val_pattern TEST \
@@ -13,7 +13,7 @@ python src/main.py \
     --stride 8 \
     --optimizer RAdam \
     --d_model 128 \
-    --dropout 0.1 \
+    --dropout 0.15 \
     --pos_encoding learnable \
     --task classification \
     --key_metric accuracy \

@@ -1,19 +1,19 @@
 python src/main.py \
     --output_dir experiments \
     --comment "classification from Scratch" \
-    --name EthanolConcentration \
+    --name Heartbeat \
     --records_file Classification_records.xls \
-    --data_dir ./datasets/EthanolConcentration \
+    --data_dir ./datasets/Heartbeat \
     --data_class tsra \
     --pattern TRAIN \
     --val_pattern TEST \
     --epochs 50 \
-    --lr 0.001 \
+    --lr 0.0001 \
     --patch_size 8 \
     --stride 8 \
     --optimizer RAdam \
     --d_model 128 \
-    --dropout 0.1 \
+    --dropout 0.0 \
     --pos_encoding learnable \
     --task classification \
     --key_metric accuracy \
