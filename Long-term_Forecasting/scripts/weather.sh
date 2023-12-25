@@ -28,7 +28,7 @@ python main.py \
     --c_out 7 \
     --freq 0 \
     --lradj type3 \
-    --patch_size 16 \
+    --patch_size 8 \
     --stride 8 \
     --percent $percent \
     --gpt_layer 2 \

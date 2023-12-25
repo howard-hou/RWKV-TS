@@ -27,7 +27,10 @@ class GPT4TS(nn.Module):
                 self.gpt2 = GPT2Model.from_pretrained('gpt2', output_attentions=True, output_hidden_states=True)  # loads a pretrained GPT-2 base model
             else:
                 print("------------------no pretrain------------------")
-                self.gpt2 = GPT2Model(GPT2Config())
+                gpt_config = GPT2Config(n_embd=configs.d_model,
+                                        n_layer=configs.gpt_layers,
+                                        n_head=configs.n_heads)
+                self.gpt2 = GPT2Model(gpt_config)
             self.gpt2.h = self.gpt2.h[:configs.gpt_layers]
             print("gpt2 = {}".format(self.gpt2))
         

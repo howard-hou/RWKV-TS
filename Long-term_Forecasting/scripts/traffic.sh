@@ -23,7 +23,7 @@ python main.py \
     --d_ff 768 \
     --freq 0 \
     --patch_size 16 \
-    --stride 8 \
+    --stride 16 \
     --percent $percent \
     --gpt_layer 2 \
     --itr 3 \
