@@ -1,7 +1,7 @@
 seq_len=512
 model=RWKV4TS
 
-for percent in 100
+for percent in 10
 do
 for pred_len in 96 192 336 720
 do
