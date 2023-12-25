@@ -1,7 +1,7 @@
 seq_len=512
 model=RWKV4TS
 
-for percent in 5 10
+for percent in 100
 do
 for pred_len in 96 192 336 720
 do
@@ -18,21 +18,20 @@ python main.py \
     --learning_rate 0.001 \
     --train_epochs 10 \
     --decay_fac 0.75 \
-    --d_model 768 \
-    --n_heads 4 \
+    --d_model 128 \
+    --n_heads 2 \
     --d_ff 768 \
     --freq 0 \
     --patch_size 16 \
-    --stride 8 \
-    --all 1 \
+    --stride 16 \
     --percent $percent \
-    --gpt_layer 6 \
+    --gpt_layer 2 \
     --itr 3 \
     --model $model \
     --patience 3 \
     --cos 1 \
     --tmax 10 \
-    --is_gpt 1
+    --pretrain 0
 
 done
 done

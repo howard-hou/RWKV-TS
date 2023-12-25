@@ -5,7 +5,7 @@ model=RWKV4TS
 
 for percent in 100
 do
-for pred_len in 96 192 336 729
+for pred_len in 96 192 336 720
 do
 
 python main.py \

@@ -4,11 +4,11 @@ export CUDA_VISIBLE_DEVICES=0
 seq_len=336
 model=RWKV4TS
 
-for percent in 5 10
+for percent in 10
 do
 for pred_len in 96 192 336 720
 do
-for lr in 0.001 0.000005
+for lr in 0.0001
 do
 
 python main.py \
@@ -24,8 +24,8 @@ python main.py \
     --learning_rate $lr \
     --train_epochs 10 \
     --decay_fac 0.5 \
-    --d_model 768 \
-    --n_heads 4 \
+    --d_model 128 \
+    --n_heads 2 \
     --d_ff 768 \
     --dropout 0.3 \
     --enc_in 7 \
@@ -34,12 +34,12 @@ python main.py \
     --patch_size 16 \
     --stride 8 \
     --percent $percent \
-    --gpt_layer 6 \
+    --gpt_layer 2 \
     --itr 3 \
     --model $model \
     --tmax 20 \
     --cos 1 \
-    --is_gpt 1
+    --pretrain 0
 
 done
 done
