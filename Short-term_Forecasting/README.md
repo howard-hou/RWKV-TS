@@ -1,6 +1,5 @@
-# One Fits All: Power General Time Series Analysis by Pretrained LM (NeurIPS 2023 Spotlight)
+# RWKV-TS: RWKV for Time Series
 
-Tian Zhou, Peisong Niu, Xue Wang, Liang Sun, Rong Jin, "One Fits All: Power General Time Series Analysis by Pretrained LM,", NeurIPS, 2023. [[paper](https://arxiv.org/abs/2302.11939)]
 
 ## Anomaly Detection
 
@@ -21,10 +20,4 @@ bash ./scripts/M4.sh
 If you find this repo useful, please cite our paper. 
 
 ```
-@inproceedings{zhou2023onefitsall,
-  title={{One Fits All}: Power General Time Series Analysis by Pretrained LM},
-  author={Tian Zhou, Peisong Niu, Xue Wang, Liang Sun, Rong Jin},
-  booktitle={NeurIPS},
-  year={2023}
-}
 ```

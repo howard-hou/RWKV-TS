@@ -2,7 +2,7 @@
 export CUDA_VISIBLE_DEVICES=0
 
 seq_len=336
-model=GPT4TS
+model=RWKV4TS
 
 for percent in 5 10
 do
