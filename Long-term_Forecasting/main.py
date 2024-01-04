@@ -139,7 +139,7 @@ for ii in range(args.itr):
     # calc total parameters
     total_params = sum(p.numel() for p in params)
     print(f'{total_params:,} total parameters.')
-    model_optim = torch.optim.Adam(params, lr=args.learning_rate)
+    model_optim = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     
     early_stopping = EarlyStopping(patience=args.patience, verbose=True)
     if args.loss_func == 'mse':
