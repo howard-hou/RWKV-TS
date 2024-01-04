@@ -35,7 +35,6 @@ python profile_inference.py \
     --model $model \
     --cos 1 \
     --tmax 20 \
-    --pretrain 1 \
     --pretrain 0
 
 done
