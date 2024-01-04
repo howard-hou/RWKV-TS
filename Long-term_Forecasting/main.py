@@ -29,7 +29,7 @@ random.seed(fix_seed)
 torch.manual_seed(fix_seed)
 np.random.seed(fix_seed)
 
-parser = argparse.ArgumentParser(description='GPT4TS')
+parser = argparse.ArgumentParser(description='RWKV4TS')
 
 parser.add_argument('--model_id', type=str, required=True, default='test')
 parser.add_argument('--checkpoints', type=str, default='./checkpoints/')
