@@ -139,83 +139,17 @@ for ii in range(args.itr):
     # calc total parameters
     total_params = sum(p.numel() for p in params)
     print(f'{total_params:,} total parameters.')
-    model_optim = torch.optim.Adam(params, lr=args.learning_rate)
-    
-    early_stopping = EarlyStopping(patience=args.patience, verbose=True)
-    if args.loss_func == 'mse':
-        criterion = nn.MSELoss()
-    elif args.loss_func == 'smape':
-        class SMAPE(nn.Module):
-            def __init__(self):
-                super(SMAPE, self).__init__()
-            def forward(self, pred, true):
-                return torch.mean(200 * torch.abs(pred - true) / (torch.abs(pred) + torch.abs(true) + 1e-8))
-        criterion = SMAPE()
-    
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(model_optim, T_max=args.tmax, eta_min=1e-8)
+    model.eval()
 
-    for epoch in range(args.train_epochs):
+    latency = []
+    for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in tqdm(enumerate(train_loader)):
+        batch_x = batch_x.float().to(device)
 
-        iter_count = 0
-        train_loss = []
-        epoch_time = time.time()
-        for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in tqdm(enumerate(train_loader)):
-
-            iter_count += 1
-            model_optim.zero_grad()
-            batch_x = batch_x.float().to(device)
-
-            batch_y = batch_y.float().to(device)
-            batch_x_mark = batch_x_mark.float().to(device)
-            batch_y_mark = batch_y_mark.float().to(device)
-            
+        batch_y = batch_y.float().to(device)
+        batch_x_mark = batch_x_mark.float().to(device)
+        batch_y_mark = batch_y_mark.float().to(device)
+        with torch.no_grad():
+            start_time = time.time()
             outputs = model(batch_x, ii)
-
-            outputs = outputs[:, -args.pred_len:, :]
-            batch_y = batch_y[:, -args.pred_len:, :].to(device)
-            loss = criterion(outputs, batch_y)
-            train_loss.append(loss.item())
-
-            if (i + 1) % 1000 == 0:
-                print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
-                speed = (time.time() - time_now) / iter_count
-                left_time = speed * ((args.train_epochs - epoch) * train_steps - i)
-                print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
-                iter_count = 0
-                time_now = time.time()
-            loss.backward()
-            model_optim.step()
-
-        
-        print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
-
-        train_loss = np.average(train_loss)
-        vali_loss = vali(model, vali_data, vali_loader, criterion, args, device, ii)
-        # test_loss = vali(model, test_data, test_loader, criterion, args, device, ii)
-        # print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}, Test Loss: {4:.7f}".format(
-        #     epoch + 1, train_steps, train_loss, vali_loss, test_loss))
-        print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f}".format(
-            epoch + 1, train_steps, train_loss, vali_loss))
-
-        if args.cos:
-            scheduler.step()
-            print("lr = {:.10f}".format(model_optim.param_groups[0]['lr']))
-        else:
-            adjust_learning_rate(model_optim, epoch + 1, args)
-        early_stopping(vali_loss, model, path)
-        if early_stopping.early_stop:
-            print("Early stopping")
-            break
-
-    best_model_path = path + '/' + 'checkpoint.pth'
-    model.load_state_dict(torch.load(best_model_path))
-    print("------------------------------------")
-    mse, mae = test(model, test_data, test_loader, args, device, ii)
-    mses.append(mse)
-    maes.append(mae)
-
-
-mses = np.array(mses)
-maes = np.array(maes)
-print("mse_mean = {:.4f}, mse_std = {:.4f}".format(np.mean(mses), np.std(mses)))
-print("mae_mean = {:.4f}, mae_std = {:.4f}".format(np.mean(maes), np.std(maes)))
+            latency.append(time.time() - start_time)
+    print("Average latency: {}".format(np.mean(latency)))
