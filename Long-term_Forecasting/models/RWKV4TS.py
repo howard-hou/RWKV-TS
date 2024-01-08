@@ -1,19 +1,3 @@
-
-"""
-RWKV "x051a" model - does not require custom CUDA kernel to train :)
-
-References:
-https://github.com/BlinkDL/RWKV-LM
-
-Inference:
-Always fast, and VRAM will not grow, because RWKV does not need KV cache.
-
-Training:
-Because we are not using custom CUDA kernel here, training is slightly slower than gpt+flash_attn when ctxlen is short.
-Training becomes faster than gpt+flash_attn when ctxlen is long.
-"""
-
-
 import numpy as np
 import torch
 import torch.nn as nn
