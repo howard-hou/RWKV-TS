@@ -1,33 +1,24 @@
-# RWKV-TS: RWKV for Time Series
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
-placeholder for paper in future
+RWKV-TS is a time-series RNN-based model that achieves both strong performance and efficiency simultaneously for time series tasks.
+
+<div align="center"><img src=./pic/RWKV-TS的架构优势.png width=60% /></div>
 
 ## Introduction
 
-this repo
 
-<div align="center"><img src=./pic/model_structure.png width=80% /></div>
+![Architecture](./pic/model_structure.png "Architecture of the RWKV-TS")
+<!-- <div align="center"><img src=./pic/model_structure.png width=80% /></div> -->
+Architecture of the RWKV-TS. RWKV-TS comprises three main components: an input module, RWKV backbone, and an output module. Firstly, the input module applies instance normalization to each channel's univariate series and segments them into patches. These patches serve as input tokens for RWKV-TS. Then, the input tokens proceed into the RWKV backbone, which comprises Time-mixing and Channel-mixing modules. Finally, the output of the last layer of the RWKV backbone is flattened and projected to predict the target.
 
 ## Time Series Tasks
 
 The proposed RWKV-TS performs well on various time series tasks, including [long-term forecasting](./Long-term_Forecasting/README.md), [short-term forecasting](./Short-term_Forecasting/README.md), [classification](./Classification/README.md), [anomaly detection](./Anomaly_Detection/README.md), [imputation](./Imputation/README.md), and [few-shot leanring](./Few-shot_Learning/README.md).
 
-<div align="center"><img src=./pic/main_result.png width=60% /></div>
-
 ## Get Start
 
 - Install Python>=3.8, PyTorch 1.8.1.
 - Follow the instructions provided in the respective task folder.
-
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-placeholder for paper in future
-```
-
 
 ## Acknowledgement
 
