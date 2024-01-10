@@ -1,9 +1,7 @@
-# RWKV-TS: RWKV for Time Series
-
-placeholder for paper in future
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
 ## Imputation
-
+The experimental results of Imputation presented in Table blow.
 ![image](../pic/imputation_result.png)
 
 ## Get Start
@@ -15,12 +13,4 @@ placeholder for paper in future
 ```bash
 bash ./scripts/ETTh1.sh
 bash ./scripts/ETTh2.sh
-```
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-placeholder for paper in future
 ```

@@ -1,8 +1,7 @@
-# RWKV-TS: RWKV for Time Series
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
-
-## Anomaly Detection
-
+## Short-term Forecasting
+The experimental results of short-term forcasting presented in Table blow.
 ![image](../pic/short_term_result.png)
 
 ## Get Start
@@ -13,11 +12,4 @@
 
 ```bash
 bash ./scripts/M4.sh
-```
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
 ```

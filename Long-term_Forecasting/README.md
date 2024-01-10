@@ -1,9 +1,7 @@
-# RWKV-TS: RWKV for Time Series
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
-placeholder for paper in future
-
-## Long-term Learning
-
+## Long-term Forecasting
+The experimental results of Long-term Forecasting presented in Table blow.
 ![image](../pic/long_term_result.png)
 
 ## Get Start
@@ -16,12 +14,4 @@ placeholder for paper in future
 ```bash
 bash ./scripts/ETTh1.sh
 bash ./scripts/ETTh2.sh
-```
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-placeholder for paper in future
 ```

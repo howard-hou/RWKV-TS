@@ -1,10 +1,8 @@
-# RWKV-TS: RWKV for Time Series
-
-placeholder for paper in future
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
 ## Anomaly Detection
-
-![image](../pic/anomaly_detection.png)
+The experimental results of Anomaly Detection presented in Table blow.
+![image](../pic/anomaly_detection_result.png)
 
 ## Get Start
 
@@ -15,12 +13,4 @@ placeholder for paper in future
 ```bash
 bash ./scripts/MSL.sh
 bash ./scripts/PSM.sh
-```
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-placeholder for paper in future
 ```

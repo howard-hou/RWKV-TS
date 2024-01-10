@@ -1,9 +1,7 @@
-# RWKV-TS: RWKV for Time Series
+# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
 
-placeholder for paper in future
-
-## Classification
-
+## Time series Classification
+The experimental results of time series classification presented in Table blow.
 ![image](../pic/classification_result.png)
 
 ## Get Start
@@ -14,12 +12,4 @@ placeholder for paper in future
 
 ```bash
 bash ./scripts/EthanolConcentration.sh
-```
-
-## Citation
-
-If you find this repo useful, please cite our paper. 
-
-```
-placeholder for paper in future
 ```

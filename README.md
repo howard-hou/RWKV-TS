@@ -5,11 +5,14 @@ RWKV-TS is a time-series RNN-based model that achieves both strong performance a
 <div align="center"><img src=./pic/RWKV-TS的架构优势.png width=60% /></div>
 
 ## Introduction
+Recurrent Neural Network (RNN) architectures historically held prominence in time series tasks, yet recently encountered challenges in time series domain. As a result, recent advancements in time series forecasting have seen a notable shift away from RNNs towards alternative architectures such as Transformers, MLPs, and CNNs.
+To make RNN great again, we propose RWKV-TS, a novel linear RNN architecture designed specifically for various time series tasks. In multiple time-series tasks, RWKV-TS demonstrates competitive performance when compared to state-of-the-art Transformer-based or CNN-based models. Notably, RWKV-TS exhibits not only comparable performance but also demonstrates reduced latency and memory utilization.
+The success of RWKV-TS encourages further exploration and innovation in leveraging RNN-based approaches within the domain of Time Series.
 
 
 ![Architecture](./pic/model_structure.png "Architecture of the RWKV-TS")
 <!-- <div align="center"><img src=./pic/model_structure.png width=80% /></div> -->
-Architecture of the RWKV-TS. RWKV-TS comprises three main components: an input module, RWKV backbone, and an output module. Firstly, the input module applies instance normalization to each channel's univariate series and segments them into patches. These patches serve as input tokens for RWKV-TS. Then, the input tokens proceed into the RWKV backbone, which comprises Time-mixing and Channel-mixing modules. Finally, the output of the last layer of the RWKV backbone is flattened and projected to predict the target.
+Architecture of the RWKV-TS is shown above. RWKV-TS comprises three main components: an input module, RWKV backbone, and an output module. Firstly, the input module applies instance normalization to each channel's univariate series and segments them into patches. These patches serve as input tokens for RWKV-TS. Then, the input tokens proceed into the RWKV backbone, which comprises Time-mixing and Channel-mixing modules. Finally, the output of the last layer of the RWKV backbone is flattened and projected to predict the target.
 
 ## Time Series Tasks
 
