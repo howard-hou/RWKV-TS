@@ -23,7 +23,7 @@ python main.py \
     --d_model 128 \
     --n_heads 2 \
     --d_ff 768 \
-    --dropout 1 \
+    --dropout 0.3 \
     --enc_in 7 \
     --c_out 7 \
     --freq 0 \

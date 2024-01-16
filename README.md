@@ -1,4 +1,4 @@
-# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
+# RWKV-TS: Beyond Traditional Recurrent Neural Network for Time Series Tasks
 
 RWKV-TS is a time-series RNN-based model that achieves both strong performance and efficiency simultaneously for time series tasks.
 

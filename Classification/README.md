@@ -1,4 +1,4 @@
-# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
+# RWKV-TS: Beyond Traditional Recurrent Neural Network for Time Series Tasks
 
 ## Time series Classification
 The experimental results of time series classification presented in Table blow.

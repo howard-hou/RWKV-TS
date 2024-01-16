@@ -1,4 +1,4 @@
-# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
+# RWKV-TS: Beyond Traditional Recurrent Neural Network for Time Series Tasks
 
 ## Anomaly Detection
 The experimental results of Anomaly Detection presented in Table blow.

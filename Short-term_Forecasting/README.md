@@ -1,4 +1,4 @@
-# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
+# RWKV-TS: Beyond Traditional Recurrent Neural Network for Time Series Tasks
 
 ## Short-term Forecasting
 The experimental results of short-term forcasting presented in Table blow.

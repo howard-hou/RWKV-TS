@@ -1,4 +1,4 @@
-# RWKV-TS: A Linear Recurrent Neural Network for Time Series Tasks
+# RWKV-TS: Beyond Traditional Recurrent Neural Network for Time Series Tasks
 
 ## Few-shot Learning
 ![image](../pic/few_shot_result.png)
