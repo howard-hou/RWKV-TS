@@ -31,7 +31,6 @@ from utils import utils
 from datasets.data import data_factory, Normalizer
 from datasets.datasplit import split_dataset
 from models.ts_transformer import model_factory
-from models.gpt4ts import gpt4ts
 from models.RWKV4TS import RWKV4TS
 from models.loss import get_loss_module
 from optimizers import get_optimizer

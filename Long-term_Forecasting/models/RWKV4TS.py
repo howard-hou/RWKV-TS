@@ -4,11 +4,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 from torch import optim
 
-from transformers.models.gpt2.modeling_gpt2 import GPT2Model
-from transformers import BertTokenizer, BertModel
 from einops import rearrange
-from embed import DataEmbedding, DataEmbedding_wo_time
-from transformers.models.gpt2.configuration_gpt2 import GPT2Config
 
 import math, warnings
 import inspect

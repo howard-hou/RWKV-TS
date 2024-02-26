@@ -2,7 +2,6 @@ from data_provider.data_factory import data_provider
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, vali, test
 from tqdm import tqdm
 from models.PatchTST import PatchTST
-from models.GPT4TS import GPT4TS
 from models.DLinear import DLinear
 from models.RWKV4TS import RWKV4TS
 
@@ -132,7 +131,7 @@ for ii in range(args.itr):
     elif args.model == "RWKV4TS":
         model = RWKV4TS(args, device)
     else:
-        model = GPT4TS(args, device)
+        raise "model error, not in [PatchTST, DLinear, RWKV4TS]"
     # mse, mae = test(model, test_data, test_loader, args, device, ii)
 
     params = model.parameters()
