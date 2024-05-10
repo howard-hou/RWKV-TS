@@ -40,10 +40,10 @@ class TestDataset(Dataset):
 
 
 class TrainDataset(Dataset):
-    def __init__(self, args, label_smoothing=None):
+    def __init__(self, args):
         self.args = args
         self.seq_len = args.ctx_len
-        self.label_smoothing = label_smoothing
+        self.label_smoothing = args.label_smoothing
         self.build_train_set()
         self.samples_per_epoch = self.args.epoch_steps * self.args.real_bsz
 
@@ -51,16 +51,18 @@ class TrainDataset(Dataset):
         df = pd.read_excel(self.args.data_file, sheet_name=None)
         keys_sorted = sorted(k for k in df)
         data_df_list = [df[k] for k in keys_sorted[:-1]]
-        if self.label_smoothing is not None:
+        if self.label_smoothing > 0:
             data_df_list_smooth = []
             for df in data_df_list:
                 df["fj_windSpeed"] = df["fj_windSpeed"].rolling(window=self.label_smoothing,center=True).median()
-                df["nwp_ws100"][df["fj_windSpeed"].isna()] = 0
+                df.loc[df["fj_windSpeed"].isna(), "fj_windSpeed"] = 0
                 df["fj_windSpeed"] = df["fj_windSpeed"].fillna(0)
                 data_df_list_smooth.append(df)
             data_df = pd.concat(data_df_list_smooth)
+            print(f"label smoothing with window={self.label_smoothing} applied")
         else:
             data_df = pd.concat(data_df_list)
+            print(f"raw data used, no label smoothing applied")
         self.X = data_df["nwp_ws100"].to_numpy()[:, np.newaxis]
         self.y = data_df["fj_windSpeed"].to_numpy()[:, np.newaxis]
         print(f"input shape: {self.X.shape}, target shape: {self.y.shape}")

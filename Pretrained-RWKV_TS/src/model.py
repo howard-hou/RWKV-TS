@@ -2,7 +2,7 @@
 # The RWKV Language Model - https://github.com/BlinkDL/RWKV-LM
 ########################################################################################################
 
-import os, math, gc, importlib
+import os, math, importlib
 import torch
 # torch._C._jit_set_profiling_executor(True)
 # torch._C._jit_set_profiling_mode(True)
@@ -339,11 +339,10 @@ class Projector(nn.Module):
         self.conv5 = nn.Conv1d(1, n_embd//4, kernel_size=5, stride=1, groups=1, padding='same')
         self.conv7 = nn.Conv1d(1, n_embd//4, kernel_size=7, stride=1, groups=1, padding='same')
         self.conv9 = nn.Conv1d(1, n_embd//4, kernel_size=9, stride=1, groups=1, padding='same')
-        self.relu = nn.ReLU()
         self.drop = nn.Dropout(0.1)
 
     def forward(self, x):
-        return self.drop(self.relu(torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1)))
+        return self.drop(torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1))
 
 
 class TimeSeriesRWKV(pl.LightningModule):
@@ -355,6 +354,7 @@ class TimeSeriesRWKV(pl.LightningModule):
             self.load_rwkv_from_pretrained(args.load_model)
         self.proj = Projector(args.n_embd)
         self.head = nn.Linear(2*args.n_embd, 1, bias=False)
+        self.best_val_loss = torch.tensor(float("inf"))
 
     def load_rwkv_from_pretrained(self, path):
         self.rwkv.load_state_dict(torch.load(path, map_location="cpu"))
@@ -422,8 +422,15 @@ class TimeSeriesRWKV(pl.LightningModule):
     def validation_epoch_end(self, outputs):
         all_predicts = torch.cat([out["predicts"] for out in outputs])
         all_targets = torch.cat([out["targets"] for out in outputs])
-        val_loss = F.mse_loss(all_predicts.view(-1), all_targets.view(-1))
+        val_loss = F.mse_loss(all_predicts.view(-1), all_targets.view(-1)).item()
         self.log("val_loss", val_loss, sync_dist=True)
+        if val_loss < self.best_val_loss and self.trainer.current_epoch >=1:
+            # remove last best model
+            if os.path.exists(os.path.join(self.args.proj_dir, f"best-{self.best_val_loss:.3f}.pth")):
+                os.remove(os.path.join(self.args.proj_dir, f"best-{self.best_val_loss:.3f}.pth"))
+            state_dict = self.state_dict()
+            torch.save(state_dict, os.path.join(self.args.proj_dir, f"best-{val_loss:.3f}.pth"))
+            self.best_val_loss = val_loss
     
     def training_step_end(self, batch_parts):
         if pl.__version__[0]!='2':
