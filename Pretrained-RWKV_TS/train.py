@@ -53,6 +53,7 @@ if __name__ == "__main__":
     parser.add_argument("--ds_bucket_mb", default=200, type=int)  # deepspeed bucket size in MB. 200 seems enough
 
     parser.add_argument("--freeze_rwkv", default=0, type=int)  # layers to freeze
+    parser.add_argument("--exp_name", default='dummy', type=str)  #
 
     parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -180,7 +181,7 @@ if __name__ == "__main__":
 
     #trainer = Trainer.from_argparse_args(args, callbacks=[train_callback(args)])
     from pytorch_lightning.loggers import CSVLogger
-    logger = CSVLogger("logs", name="dummy")
+    logger = CSVLogger("logs", name=args.exp_name)
     trainer = Trainer(max_epochs=args.epoch_count, logger=logger, accelerator='gpu', devices=1, strategy="deepspeed_stage_1", precision='bf16',
                       callbacks=[train_callback(args)])
 
