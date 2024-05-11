@@ -338,7 +338,7 @@ class Projector(nn.Module):
         self.conv3 = nn.Conv1d(1, n_embd//4, kernel_size=3, stride=1, groups=1, padding='same')
         self.conv5 = nn.Conv1d(1, n_embd//4, kernel_size=5, stride=1, groups=1, padding='same')
         self.conv7 = nn.Conv1d(1, n_embd//4, kernel_size=7, stride=1, groups=1, padding='same')
-        self.conv9 = nn.Conv1d(1, n_embd//4, kernel_size=1, stride=1, groups=1, padding='same')
+        self.conv9 = nn.Conv1d(1, n_embd//4, kernel_size=9, stride=1, groups=1, padding='same')
         self.drop = nn.Dropout(0.1)
 
     def forward(self, x):
@@ -357,6 +357,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         self.head = nn.Linear(args.n_embd, 1, bias=False)
         self.best_val_loss = torch.tensor(float("inf"))
         self.do_normalize = args.do_normalize
+        self.prefix_len = args.ctx_len // 24
 
     def load_rwkv_from_pretrained(self, path):
         self.rwkv.load_state_dict(torch.load(path, map_location="cpu"))
@@ -395,7 +396,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         x, targets = samples["input_points"], samples["targets"]
         B, T, C = x.shape
         x = self.proj(x.view(B, C, T)).view(B, T, -1)
-        x = self.rwkv(x)[:, self.args.ctx_len:, :] # 
+        x = self.rwkv(x)[:, self.prefix_len:, :] # 
         outputs = self.head(x)
         return outputs, targets
 
