@@ -338,11 +338,12 @@ class Projector(nn.Module):
         self.conv3 = nn.Conv1d(1, n_embd//4, kernel_size=3, stride=1, groups=1, padding='same')
         self.conv5 = nn.Conv1d(1, n_embd//4, kernel_size=5, stride=1, groups=1, padding='same')
         self.conv7 = nn.Conv1d(1, n_embd//4, kernel_size=7, stride=1, groups=1, padding='same')
-        self.conv9 = nn.Conv1d(1, n_embd//4, kernel_size=9, stride=1, groups=1, padding='same')
+        self.conv9 = nn.Conv1d(1, n_embd//4, kernel_size=1, stride=1, groups=1, padding='same')
         self.drop = nn.Dropout(0.1)
 
     def forward(self, x):
         return self.drop(torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1))
+
 
 
 class TimeSeriesRWKV(pl.LightningModule):
