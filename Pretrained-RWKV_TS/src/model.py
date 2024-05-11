@@ -354,7 +354,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         if args.load_model:
             self.load_rwkv_from_pretrained(args.load_model)
         self.proj = Projector(args.n_embd)
-        self.head = nn.Linear(2*args.n_embd, 1, bias=False)
+        self.head = nn.Linear(args.n_embd, 1, bias=False)
         self.best_val_loss = torch.tensor(float("inf"))
         self.do_normalize = args.do_normalize
 
@@ -395,10 +395,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         x, targets = samples["input_points"], samples["targets"]
         B, T, C = x.shape
         x = self.proj(x.view(B, C, T)).view(B, T, -1)
-        x_rev = x.flip(1)
-        x = self.rwkv(x)
-        x_rev = self.rwkv(x_rev)
-        x = torch.concat((x, x_rev.flip(1)), 2)
+        x = self.rwkv(x)[:, self.args.ctx_len:, :] # 
         outputs = self.head(x)
         return outputs, targets
 

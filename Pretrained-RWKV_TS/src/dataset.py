@@ -25,8 +25,8 @@ class TestDataset(Dataset):
         X = data_df["nwp_ws100"].to_numpy()[:, np.newaxis]
         y = data_df["fj_windSpeed"].to_numpy()[:, np.newaxis]
         # split X, y to chunk 
-        X_chunks = [X[i:i+self.seq_len] for i in range(0, len(X), self.seq_len)]
-        y_chunks = [y[i:i+self.seq_len] for i in range(0, len(y), self.seq_len)]
+        X_chunks = [X[i-self.seq_len:i+self.seq_len] for i in range(0, len(X), self.seq_len) if i != 0]
+        y_chunks = [y[i:i+self.seq_len] for i in range(0, len(y), self.seq_len) if i != 0]
         print(f"input chunks: {len(X_chunks)}, target chunks: {len(y_chunks)}")
         self.X = X_chunks
         self.y = y_chunks
@@ -80,11 +80,11 @@ class TrainDataset(Dataset):
 
     def __getitem__(self, idx):
         # random sample a start index
-        s = random.randrange(len(self.X) - self.seq_len)
+        s = random.randrange(self.seq_len, len(self.X) - self.seq_len)
         if self.do_normalize:
-            input_points = (self.X[s:s+self.seq_len] - self.X_mean) / self.X_std
+            input_points = (self.X[s-self.seq_len:s+self.seq_len] - self.X_mean) / self.X_std
             targets = (self.y[s:s+self.seq_len] - self.y_mean) / self.y_std
         else:
-            input_points = self.X[s:s+self.seq_len]
+            input_points = self.X[s-self.seq_len:s+self.seq_len] # include the previous seq_len points
             targets = self.y[s:s+self.seq_len]
         return dict(input_points=input_points, targets=targets)
