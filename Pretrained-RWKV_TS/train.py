@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--freeze_rwkv", default=0, type=int)  # layers to freeze
     parser.add_argument("--exp_name", default='dummy', type=str)  #
     parser.add_argument("--label_smoothing", default=0, type=int)  # label smoothing window
+    parser.add_argument("--do_normalize", action="store_true")  # normalize input
 
     parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args()
@@ -168,8 +169,13 @@ if __name__ == "__main__":
     from src.dataset import TrainDataset, TestDataset
 
     train_data = TrainDataset(args)
+    # add X_mean, X_std to args
+    args.X_mean = train_data.X_mean
+    args.X_std = train_data.X_std
     val_data = TestDataset(args)
-
+    # add y_mean, y_std to args
+    args.y_mean = train_data.y_mean
+    args.y_std = train_data.y_std
     from src.model import TimeSeriesRWKV
     # 256gb cpu memory is not enough for 8 gpus
     # to use 6 gpus on 256gb cpu memory, use .half() to save memory
@@ -184,7 +190,7 @@ if __name__ == "__main__":
     from pytorch_lightning.loggers import CSVLogger
     logger = CSVLogger("logs", name=args.exp_name)
     trainer = Trainer(max_epochs=args.epoch_count, logger=logger, accelerator='gpu', devices=1, strategy="deepspeed_stage_1", precision='bf16',
-                      callbacks=[train_callback(args)])
+                      callbacks=[train_callback(args)], enable_checkpointing=False)
 
     # must set shuffle=False, persistent_workers=False (because worker is in another thread)
     data_loader = DataLoader(train_data, shuffle=False, pin_memory=True, batch_size=args.micro_bsz, num_workers=1, 

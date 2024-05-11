@@ -356,6 +356,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         self.proj = Projector(args.n_embd)
         self.head = nn.Linear(2*args.n_embd, 1, bias=False)
         self.best_val_loss = torch.tensor(float("inf"))
+        self.do_normalize = args.do_normalize
 
     def load_rwkv_from_pretrained(self, path):
         self.rwkv.load_state_dict(torch.load(path, map_location="cpu"))
@@ -418,6 +419,8 @@ class TimeSeriesRWKV(pl.LightningModule):
     
     def validation_step(self, batch, batch_idx):
         outputs, targets = self(batch)
+        if self.do_normalize:
+            outputs = self.args.y_mean + self.args.y_std * outputs
         return dict(predicts=outputs.view(-1), targets=targets.view(-1))
     
     def validation_epoch_end(self, outputs):
@@ -432,6 +435,12 @@ class TimeSeriesRWKV(pl.LightningModule):
             state_dict = self.state_dict()
             torch.save(state_dict, os.path.join(self.args.proj_dir, f"best-{val_loss:.3f}.pth"))
             self.best_val_loss = val_loss
+            # plot best figure
+            from .utils import plot_prediction_and_target
+            plot_dir = os.path.join(self.args.proj_dir, "best_model_plot")
+            if not os.path.exists(plot_dir):
+                os.makedirs(plot_dir)
+            plot_prediction_and_target(outputs, plot_dir)
     
     def training_step_end(self, batch_parts):
         if pl.__version__[0]!='2':

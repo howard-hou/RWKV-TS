@@ -16,6 +16,7 @@ class TestDataset(Dataset):
         self.args = args
         self.seq_len = args.ctx_len
         self.build_test_set()
+        self.do_normalize = args.do_normalize
 
     def build_test_set(self):
         df = pd.read_excel(self.args.data_file, sheet_name=None)
@@ -34,7 +35,10 @@ class TestDataset(Dataset):
         return len(self.X)
 
     def __getitem__(self, idx):
-        input_points = self.X[idx]
+        if self.do_normalize:
+            input_points = (self.X[idx] - self.args.X_mean) / self.args.X_std
+        else:
+            input_points = self.X[idx]
         targets = self.y[idx]
         return dict(input_points=input_points, targets=targets)
 
@@ -45,7 +49,7 @@ class TrainDataset(Dataset):
         self.seq_len = args.ctx_len
         self.label_smoothing = args.label_smoothing
         self.build_train_set()
-        self.samples_per_epoch = self.args.epoch_steps * self.args.real_bsz
+        self.do_normalize = args.do_normalize
 
     def build_train_set(self):
         df = pd.read_excel(self.args.data_file, sheet_name=None)
@@ -66,6 +70,10 @@ class TrainDataset(Dataset):
         self.X = data_df["nwp_ws100"].to_numpy()[:, np.newaxis]
         self.y = data_df["fj_windSpeed"].to_numpy()[:, np.newaxis]
         print(f"input shape: {self.X.shape}, target shape: {self.y.shape}")
+        self.X_mean = self.X.mean()
+        self.X_std = self.X.std()
+        self.y_mean = self.y.mean()
+        self.y_std = self.y.std()
 
     def __len__(self):
         return self.args.epoch_steps * self.args.micro_bsz
@@ -73,6 +81,10 @@ class TrainDataset(Dataset):
     def __getitem__(self, idx):
         # random sample a start index
         s = random.randrange(len(self.X) - self.seq_len)
-        input_points = self.X[s:s+self.seq_len]
-        targets = self.y[s:s+self.seq_len]
+        if self.do_normalize:
+            input_points = (self.X[s:s+self.seq_len] - self.X_mean) / self.X_std
+            targets = (self.y[s:s+self.seq_len] - self.y_mean) / self.y_std
+        else:
+            input_points = self.X[s:s+self.seq_len]
+            targets = self.y[s:s+self.seq_len]
         return dict(input_points=input_points, targets=targets)
