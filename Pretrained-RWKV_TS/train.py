@@ -55,6 +55,7 @@ if __name__ == "__main__":
     parser.add_argument("--freeze_rwkv", default=0, type=int)  # layers to freeze
     parser.add_argument("--exp_name", default='dummy', type=str)  #
     parser.add_argument("--label_smoothing", default=0, type=int)  # label smoothing window
+    parser.add_argument("--prefix_len", default=0, type=int)  # 
     parser.add_argument("--do_normalize", action="store_true")  # normalize input
 
     parser = Trainer.add_argparse_args(parser)

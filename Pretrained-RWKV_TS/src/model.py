@@ -357,7 +357,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         self.head = nn.Linear(args.n_embd, 1, bias=False)
         self.best_val_loss = torch.tensor(float("inf"))
         self.do_normalize = args.do_normalize
-        self.prefix_len = args.ctx_len // 24
+        self.prefix_len = args.prefix_len
 
     def load_rwkv_from_pretrained(self, path):
         self.rwkv.load_state_dict(torch.load(path, map_location="cpu"))
