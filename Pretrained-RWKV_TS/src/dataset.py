@@ -25,12 +25,21 @@ class TestDataset(Dataset):
         data_df = df[keys_sorted[-1]]
         X = data_df["nwp_ws100"].to_numpy()[:, np.newaxis]
         y = data_df["fj_windSpeed"].to_numpy()[:, np.newaxis]
+        print(f"input shape: {X.shape}, target shape: {y.shape}")
+        # shift the fj_windSpeed
+        shifted_list = []
+        for i in range(1, self.args.shift_steps+1):
+            shifted_windspeed = data_df["fj_windSpeed"].shift(i).fillna(0).to_numpy()[:, np.newaxis]
+            shifted_list.append(shifted_windspeed)
+        self.shifted_y = np.concatenate(shifted_list, axis=1)
         # split X, y to chunk 
         X_chunks = [X[i-self.prefix_len:i+self.seq_len] for i in range(0, len(X), self.seq_len) if i != 0]
         y_chunks = [y[i:i+self.seq_len] for i in range(0, len(y), self.seq_len) if i != 0]
+        y_shifted_chunks = [self.shifted_y[i:i+self.seq_len] for i in range(0, len(self.shifted_y), self.seq_len) if i != 0]
         print(f"input chunks: {len(X_chunks)}, target chunks: {len(y_chunks)}")
         self.X = X_chunks
         self.y = y_chunks
+        self.shifted_y = y_shifted_chunks
 
     def __len__(self):
         return len(self.X)
@@ -41,7 +50,8 @@ class TestDataset(Dataset):
         else:
             input_points = self.X[idx]
         targets = self.y[idx]
-        return dict(input_points=input_points, targets=targets)
+        shifted_targets = self.shifted_y[idx]
+        return dict(input_points=input_points, targets=targets, shifted_targets=shifted_targets)
 
 
 class TrainDataset(Dataset):
@@ -76,6 +86,12 @@ class TrainDataset(Dataset):
         self.X_std = self.X.std()
         self.y_mean = self.y.mean()
         self.y_std = self.y.std()
+        # shift the fj_windSpeed
+        shifted_list = []
+        for i in range(1, self.args.shift_steps+1):
+            shifted_windspeed = data_df["fj_windSpeed"].shift(i).fillna(0).to_numpy()[:, np.newaxis]
+            shifted_list.append(shifted_windspeed)
+        self.shifted_y = np.concatenate(shifted_list, axis=1)
 
     def __len__(self):
         return self.args.epoch_steps * self.args.micro_bsz
@@ -86,7 +102,9 @@ class TrainDataset(Dataset):
         if self.do_normalize:
             input_points = (self.X[s-self.prefix_len:s+self.seq_len] - self.X_mean) / self.X_std
             targets = (self.y[s:s+self.seq_len] - self.y_mean) / self.y_std
+            shifted_targets = (self.shifted_y[s:s+self.seq_len] - self.y_mean) / self.y_std
         else:
             input_points = self.X[s-self.prefix_len:s+self.seq_len] # include the previous seq_len points
             targets = self.y[s:s+self.seq_len]
-        return dict(input_points=input_points, targets=targets)
+            shifted_targets = self.shifted_y[s:s+self.seq_len]
+        return dict(input_points=input_points, targets=targets, shifted_targets=shifted_targets)

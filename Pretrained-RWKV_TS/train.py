@@ -57,6 +57,7 @@ if __name__ == "__main__":
     parser.add_argument("--label_smoothing", default=0, type=int)  # label smoothing window
     parser.add_argument("--prefix_len", default=0, type=int)  # 
     parser.add_argument("--do_normalize", action="store_true")  # normalize input
+    parser.add_argument("--shift_steps", default=5, type=int)  # shift steps for fj_windSpeed
 
     parser = Trainer.add_argparse_args(parser)
     args = parser.parse_args()

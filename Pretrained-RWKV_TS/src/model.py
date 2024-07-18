@@ -342,7 +342,26 @@ class Projector(nn.Module):
         self.drop = nn.Dropout(0.1)
 
     def forward(self, x):
-        return self.drop(torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1))
+        B, T, C = x.size()
+        return self.drop(torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1)).view(B, T, -1)
+
+
+class Projector2(nn.Module):
+    def __init__(self, n_embd, shift_steps):
+        super().__init__()
+        self.conv3 = nn.Conv1d(1, n_embd//8, kernel_size=3, stride=1, groups=1, padding='same')
+        self.conv5 = nn.Conv1d(1, n_embd//8, kernel_size=5, stride=1, groups=1, padding='same')
+        self.conv7 = nn.Conv1d(1, n_embd//8, kernel_size=7, stride=1, groups=1, padding='same')
+        self.conv9 = nn.Conv1d(1, n_embd//8, kernel_size=9, stride=1, groups=1, padding='same')
+        self.linear = nn.Linear(shift_steps, n_embd//2)
+        self.drop = nn.Dropout(0.1)
+
+    def forward(self, x, shifted_y):
+        B, T, C = x.size()
+        x = x.view(B, C, T)
+        shifted_y_emb = self.linear(shifted_y)
+        x_emb = torch.cat([self.conv3(x), self.conv5(x), self.conv7(x), self.conv9(x)], 1)
+        return self.drop(torch.cat([x_emb.view(B, T, -1), shifted_y_emb], 2))
 
 
 
@@ -353,7 +372,7 @@ class TimeSeriesRWKV(pl.LightningModule):
         self.rwkv = RWKV(args)
         if args.load_model:
             self.load_rwkv_from_pretrained(args.load_model)
-        self.proj = Projector(args.n_embd)
+        self.proj = Projector2(args.n_embd, args.shift_steps)
         self.head = nn.Linear(args.n_embd, 1, bias=False)
         self.best_val_loss = torch.tensor(float("inf"))
         self.do_normalize = args.do_normalize
@@ -393,12 +412,11 @@ class TimeSeriesRWKV(pl.LightningModule):
         return FusedAdam(optim_groups, lr=self.args.lr_init, betas=self.args.betas, eps=self.args.adam_eps, bias_correction=True, adam_w_mode=True, amsgrad=False)
 
     def forward(self, samples):
-        x, targets = samples["input_points"], samples["targets"]
-        B, T, C = x.shape
-        x = self.proj(x.view(B, C, T)).view(B, T, -1)
+        x, y, shifted_y = samples["input_points"], samples["targets"], samples["shifted_targets"]
+        x = self.proj(x, shifted_y)
         x = self.rwkv(x)[:, self.prefix_len:, :] # 
         outputs = self.head(x)
-        return outputs, targets
+        return outputs, y
 
     def bidirectional_forward(self, x, x_emb=None):
         pass
